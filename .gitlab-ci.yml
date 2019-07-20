@@ -1,0 +1,20 @@
+test:pylint:
+  image: python:3.6
+  only:
+    - master
+  before_script:
+    - python --version
+    - pip install -r requirements.txt --quiet
+    - 'which ssh-agent || ( yum install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $PROD_SERVER >> ~/.ssh/known_hosts   
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - pip install pylint --quiet
+    - pylint hydra-notifierd.py lib/*.py
+    - ssh centos@$PROD_SERVER deploy.sh
+  tags:
+    - docker

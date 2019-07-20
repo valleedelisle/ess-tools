@@ -1,0 +1,20 @@
+"""
+Returns the configuration object
+"""
+
+import configparser
+
+class Config(object): # pylint: disable=useless-object-inheritance,too-few-public-methods
+  """
+  Returns the configuration object
+  """
+  def __init__(self, config_file=None):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    self.__dict__.update(config)
+    self.configparser = config
+    self.config_file = config_file
+
+  def __repr__(self):
+    args = ['{} => {}'.format(k, repr(v)) for (k, v) in vars(self).items()]
+    return self.__class__.__name__ + '({})'.format(', '.join(args))

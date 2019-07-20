@@ -1,0 +1,19 @@
+[Unit]
+Description=Hydra Notifier Daemon
+Documentation=https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd
+After=syslog.target
+
+[Service]
+EnvironmentFile=/etc/sysconfig/hydra-notifierd
+Type=simple
+User=centos
+Group=centos
+WorkingDirectory=HYDRA_HOME
+PIDFile=HYDRA_HOME/hydra-notifierd.pid
+ExecStart=/bin/sh -c 'HYDRA_HOME/.venv/bin/python3.6 HYDRA_HOME/hydra-notifierd.py -l HYDRA_HOME/hydra-notifierd.log -w HYDRA_HOME'
+Restart=always
+TimeoutStartSec=10
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
