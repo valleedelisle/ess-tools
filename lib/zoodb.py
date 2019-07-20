@@ -35,7 +35,7 @@ class Zoo():
       try:
         self.storage = ZODB.FileStorage.FileStorage(self.case_db_path)
       except zc.lockfile.LockError as error:
-        LOG.warning("ZoDB locked: %s" % (error))
+        LOG.warning("ZoDB locked: %s", error)
         if i >= conf.zodb.getint('retry') - 2:
           raise SystemError("ZoDB locked for too long")
         time.sleep(1)

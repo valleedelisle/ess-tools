@@ -8,6 +8,7 @@ Notification tool for Red Hat's hydra API
 
 from __future__ import print_function
 from datetime import datetime
+import time
 import argparse
 import unicodedata  # pylint: disable=unused-import
 import persistent.dict # pylint: disable=unused-import
