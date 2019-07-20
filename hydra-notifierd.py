@@ -8,6 +8,7 @@ Notification tool for Red Hat's hydra API
 
 from __future__ import print_function
 import time
+from datetime import datetime
 import argparse
 import unicodedata  # pylint: disable=unused-import
 import persistent.dict # pylint: disable=unused-import
@@ -56,7 +57,8 @@ def hydra_poll(customer):
     # The check for new case is done here because validate_case
     # requires 2 cases, and new cases aren't already in DB normally
     if case.internalStatus == 'Unassigned':
-      case.events.append(Event(case, 'internalStatus', 'New Case in Queue', notify=True, conf=CONF))
+      case.events.append(Event(case, 'internalStatus', 'New Case in Queue',
+                               time=datetime.now(), notify=True, conf=CONF))
     # We must set this to make sure ZODB to saves the object to disk
     case._p_changed = True # pylint: disable=protected-access
     CASE_DB.root['cases'][case.caseNumber] = case
