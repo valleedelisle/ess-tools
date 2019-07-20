@@ -43,14 +43,14 @@ def gen_report(args): # pylint: disable=redefined-outer-name
   LOG.info("Aguments: %s" % (args))
   CONF.notifierd['debug'] = str(args.debug)
   LOG.debug("Conf %s" % (CONF))
-  CASE_DB = Zoo(CONF.notifierd['database']) # pylint: disable=redefined-outer-name
+  CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
   LOG.info("{0} cases in memory".format(len(CASE_DB.root["cases"])))
   for case in CASE_DB.root['cases']:
     if CASE_DB.root['cases'][case].events:
       LOG.info("Case %s" % case)
       for event in sorted(CASE_DB.root['cases'][case].events, key=lambda x: x.time, reverse=True):
         LOG.info("%s %s" % (event.time, event.text))
-
+  time.sleep(30)
   CASE_DB.close()
 
 if __name__ == '__main__':
