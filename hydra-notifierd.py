@@ -7,7 +7,6 @@ Notification tool for Red Hat's hydra API
 """
 
 from __future__ import print_function
-import time
 from datetime import datetime
 import argparse
 import unicodedata  # pylint: disable=unused-import
@@ -75,7 +74,7 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
       while True:
         CONF.notifierd['debug'] = str(args.debug)
         LOG.debug("Conf %s" % (CONF))
-        CASE_DB = Zoo(CONF.notifierd['database']) # pylint: disable=redefined-outer-name
+        CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
         LOG.info("{0} cases in memory, sleep every {1} seconds"
                  .format(len(CASE_DB.root["cases"]), CONF.notifierd.getint('sleep')))
         for sec in CONF.configparser.sections():
