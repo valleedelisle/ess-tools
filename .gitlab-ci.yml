@@ -1,4 +1,4 @@
-test:pylint:
+master_deploy:
   image: python:3.6
   only:
     - master
@@ -18,3 +18,16 @@ test:pylint:
     - ssh centos@$PROD_SERVER deploy.sh
   tags:
     - docker
+
+testing_branches:
+  image: python:3.6
+  before_script:
+    - python --version
+    - pip install -r requirements.txt --quiet
+  script:
+    - pip install pylint --quiet
+    - pylint hydra-notifierd.py lib/*.py
+  tags:
+    - docker
+  except:
+    - master
