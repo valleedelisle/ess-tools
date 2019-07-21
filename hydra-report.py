@@ -65,7 +65,8 @@ def gen_report(args): # pylint: disable=redefined-outer-name
 
   for customer in event_customer:
     customer_conf = getattr(CONF, customer)
-    body = "These were the case events for {0} for the last {1} hours:\n".format(customer_conf['name'], args.time)
+    body = ("These were the case events for {0} for the last {1} hours:\n"
+           .format(customer_conf['name'], args.time))
     for case in event_customer[customer]:
       body += "Case {0} Status: {1}\n".format(case, event_customer[customer][case][0].case.status)
       for event in event_customer[customer][case]:
