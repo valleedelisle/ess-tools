@@ -3,11 +3,13 @@ ZoDB Class
 """
 
 import logging
+import time
 import sys
 import os
 from datetime import datetime, timedelta
 import persistent
 import transaction
+import zc.lockfile
 import ZODB
 import ZODB.FileStorage
 from ZODB.FileStorage import fsdump # pylint: disable=unused-import
@@ -19,7 +21,7 @@ class Zoo():
   ZoDB object
   """
   # pylint: disable=too-many-instance-attributes
-  def __init__(self, dbname):
+  def __init__(self, dbname, conf):
     self.dbname = dbname
     self.case_db_folder = os.path.join(sys.path[0], "db")
     if os.path.isdir(self.case_db_folder) is False:
@@ -29,7 +31,17 @@ class Zoo():
         LOG.error("Unable to create directory: %s", exc)
         exit(1)
     self.case_db_path = os.path.join(self.case_db_folder, self.dbname + ".fs")
-    self.storage = ZODB.FileStorage.FileStorage(self.case_db_path)
+    for i in range(1, conf.zodb.getint('retry')):
+      try:
+        self.storage = ZODB.FileStorage.FileStorage(self.case_db_path)
+      except zc.lockfile.LockError as error:
+        LOG.warning("ZoDB locked: %s", error)
+        if i >= conf.zodb.getint('retry') - 2:
+          raise SystemError("ZoDB locked for too long")
+        time.sleep(1)
+        continue
+      else:
+        break
     self.db = ZODB.DB(self.storage) # pylint: disable=invalid-name
     self.connection = self.db.open()
     self.root = self.connection.root()
