@@ -3,6 +3,7 @@ Module for the case objects
 """
 
 import logging
+from datetime import datetime
 import persistent
 from .event import Event # pylint: disable=relative-beyond-top-level
 
@@ -73,7 +74,8 @@ class Case(persistent.Persistent): # pylint: disable=too-many-instance-attribute
     """
     store the events in a list for future reference
     """
-    self.events.append(Event(self, variable, text, notify=notify, conf=self.conf))
+    self.events.append(Event(self, variable, text,
+                             time=datetime.now(), notify=notify, conf=self.conf))
 
   def validate_case(self, case):
     """
