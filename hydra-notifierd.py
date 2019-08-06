@@ -7,6 +7,7 @@ Notification tool for Red Hat's hydra API
 """
 
 from __future__ import print_function
+from datetime import datetime
 import time
 import argparse
 import unicodedata  # pylint: disable=unused-import
@@ -56,7 +57,8 @@ def hydra_poll(customer):
     # The check for new case is done here because validate_case
     # requires 2 cases, and new cases aren't already in DB normally
     if case.internalStatus == 'Unassigned':
-      case.events.append(Event(case, 'internalStatus', 'New Case in Queue', notify=True, conf=CONF))
+      case.events.append(Event(case, 'internalStatus', 'New Case in Queue',
+                               time=datetime.now(), notify=True, conf=CONF))
     # We must set this to make sure ZODB to saves the object to disk
     case._p_changed = True # pylint: disable=protected-access
     CASE_DB.root['cases'][case.caseNumber] = case
@@ -73,7 +75,7 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
       while True:
         CONF.notifierd['debug'] = str(args.debug)
         LOG.debug("Conf %s" % (CONF))
-        CASE_DB = Zoo(CONF.notifierd['database']) # pylint: disable=redefined-outer-name
+        CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
         LOG.info("{0} cases in memory, sleep every {1} seconds"
                  .format(len(CASE_DB.root["cases"]), CONF.notifierd.getint('sleep')))
         for sec in CONF.configparser.sections():
