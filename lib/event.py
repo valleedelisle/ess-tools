@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 import logging
 import smtplib
 import traceback
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import requests
 from lib.twilio import Twilio
+from lib.mail import Email
 
 LOG = logging.getLogger("root.event")
 
@@ -92,6 +91,7 @@ class Event():
 
     if (self.conf.notif_email.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
+      Email(self.conf, self.customer_conf['mailing_list'], self.subject, text, self.case.html())
       LOG.info("Sending email to %s", self.customer_conf['mailing_list'])
       msg = MIMEMultipart('alternative')
       msg['From'] = self.conf.notif_email['from']
