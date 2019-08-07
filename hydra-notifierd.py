@@ -75,8 +75,6 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
       while True:
         CONF.notifierd['debug'] = str(args.debug)
         LOG.debug("Conf %s" % (CONF))
-        LOG.info("{0} cases in memory, sleep every {1} seconds"
-                 .format(len(CASE_DB.root["cases"]), CONF.notifierd.getint('sleep')))
         for sec in CONF.configparser.sections():
           section = getattr(CONF, sec)
           if 'customer_' in sec and section.getboolean('enabled'):
@@ -91,6 +89,7 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
 
         LOG.info("Expiring objects older than %s days" % CONF.notifierd['expire'])
         CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
+        LOG.info("{0} cases in memory".format(len(CASE_DB.root["cases"])))
         CASE_DB.expire(CONF.notifierd.getint('expire'))
         CASE_DB.close()
 
