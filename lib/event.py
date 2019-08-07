@@ -4,8 +4,6 @@ Module for event object
 
 from datetime import datetime, timedelta
 import logging
-import smtplib
-import traceback
 import requests
 from lib.twilio import Twilio
 from lib.mail import Email

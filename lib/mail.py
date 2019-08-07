@@ -14,7 +14,7 @@ class Email():
   Class to send emails
   """
   # pylint: disable=too-few-public-methods
-  def __init__(self, conf, customer_conf, subject, body_text, body_html=None):
+  def __init__(self, conf, customer_conf, subject, body_text, body_html=None): # pylint: too-many-arguments
     self.conf = conf
     self.msg = MIMEMultipart('alternative')
     self.msg['From'] = self.conf.notif_email['from']
