@@ -90,7 +90,8 @@ class Event():
     if (self.conf.notif_email.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
       LOG.info("Sending email to %s", self.customer_conf['mailing_list'])
-      Email(self.conf, self.customer_conf, self.subject, str(self.case.__dict__), self.case.html())
+      Email(self.conf, self.customer_conf['mailing_list'], self.subject, str(self.case.__dict__),
+            self.case.html())
 
   def send_mailgun(self):
     """
