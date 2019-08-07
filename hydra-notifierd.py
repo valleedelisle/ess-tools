@@ -85,11 +85,11 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
             for key in section:
               LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
             hydra_poll(sec)
+            time.sleep(CONF.notifierd.getint('sleep'))
 
         LOG.info("Expiring objects older than %s days" % CONF.notifierd['expire'])
         CASE_DB.expire(CONF.notifierd.getint('expire'))
         CASE_DB.close()
-        time.sleep(CONF.notifierd.getint('sleep'))
 
   except Exception as error: # pylint: disable=broad-except
     LOG.error("Daemon failed: %s" % error)
