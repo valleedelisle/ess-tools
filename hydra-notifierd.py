@@ -75,7 +75,6 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
       while True:
         CONF.notifierd['debug'] = str(args.debug)
         LOG.debug("Conf %s" % (CONF))
-        CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
         LOG.info("{0} cases in memory, sleep every {1} seconds"
                  .format(len(CASE_DB.root["cases"]), CONF.notifierd.getint('sleep')))
         for sec in CONF.configparser.sections():
@@ -84,10 +83,14 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
             LOG.info("Checking %s Config: %s" % (sec, section))
             for key in section:
               LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
+
+            CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
             hydra_poll(sec)
+            CASE_DB.close()
             time.sleep(CONF.notifierd.getint('sleep'))
 
         LOG.info("Expiring objects older than %s days" % CONF.notifierd['expire'])
+        CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
         CASE_DB.expire(CONF.notifierd.getint('expire'))
         CASE_DB.close()
 
