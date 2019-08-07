@@ -49,12 +49,18 @@ def gen_report(args): # pylint: disable=redefined-outer-name
   CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
   LOG.info("{0} cases in memory".format(len(CASE_DB.root["cases"])))
   event_customer = defaultdict(dict)
+  customer_cases = defaultdict(list)
+  now = datetime.now()
   for case in CASE_DB.root['cases']:
-    if CASE_DB.root['cases'][case].events:
-      LOG.info("Case %s" % case)
-      for event in sorted(CASE_DB.root['cases'][case].events, key=lambda x: x.time, reverse=True):
-        LOG.info("%s %s" % (event.time, event.text))
-  time.sleep(30)
+    case_obj = CASE_DB.root['cases'][case]
+    if case_obj.events:
+      for event in sorted(case_obj.events, key=lambda x: x.time, reverse=True):
+        if now-timedelta(hours=args.time) <= event.time:
+          customer_cases[case_obj.customer].append(event)
+  for customer in customer_cases:
+    LOG.info("Customer %s" % customer)
+    for event in customer_cases[customer]:
+      LOG.info("Event: %s" % event.case)
   CASE_DB.close()
 
 if __name__ == '__main__':
