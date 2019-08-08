@@ -7,12 +7,18 @@
 4. [Author](#author)
 
 ## Description
-This notifier should be executed every X minutes. Every execution downloads the list of cases from the [Hydra API](https://mojo.redhat.com/groups/cee-integration/blog/2016/12/06/hydra-rest-api). If a case matches the criterias specified, it will trigger a notification. Here's the list of the current notification type supported:
+
+This repository contains a set of tool to interact with the [Hydra API](https://mojo.redhat.com/groups/cee-integration/blog/2016/12/06/hydra-rest-api), a Red Hat internal API mapped to the case application.
+
+### Notifierd
+The notification tool will poke the API every X seconds based on a set of configuration and criteria. Some events will trigger notifications.
+
+#### Notification type
 - SMS (using [Twilio](https://www.twilio.com/))
 - Mail (using [Mailgun](https://www.mailgun.com/)) or using a standard SMTP
 - Logfile
 
-## Events
+#### Events
 This is the list of events that will trigger a notification:
 - Severity change
 - RME is activated
@@ -23,21 +29,26 @@ This is the list of events that will trigger a notification:
 - SBT is breached, or nearly breached, it's customizable
 - New case in Queue
 
-It's quite easy to add more, or tweak the current ones. Let me know if we need to change something.
+#### Case closer
+Tool that takes a list of cases and closes them
 
-All other events are still logged in the database for reporting and analysis.
+#### Case tagger
+Tool that takes a list of cases and adds tags to them
+
+#### Report
+Tool that generates an email with the last events for specific accounts. It's good for handover across timezone.
 
 ## Installation
 
 - Clone this repository
 
 ```
-$ git clone git@gitlab.cee.redhat.com:dvalleed/hydra-notifierd.git
+$ git clone git@github.com:valleedelisle/hydra-notifierd.git
 ```
 
-- To send email notification, you need to have a [Mailgun](https://www.mailgun.com/) account. It's free.
+- To send email notification, you need to have a [Mailgun](https://www.mailgun.com/) account or you need to have access to an SMTP server.
 
-- To send SMS notification, you need to have a [Twilio](https://www.twilio.com) account. It's very cheap.
+- To send SMS notification, you need to have a [Twilio](https://www.twilio.com) account.
 
 - Build a venv
 
@@ -53,7 +64,7 @@ $ pip3 install -r requirements.txt
 
 - Edit `hydra-notifierd.conf`
 
-- You can add the secrets and password un `hydra-notifierd-secrets.conf`
+- You can add the secrets and password in `hydra-notifierd-secrets.conf`
 
 - Execute the `hydra-notifierd.py` script after loading the venv
 
@@ -67,10 +78,11 @@ $ ./hydra-notifierd.py
 command="/git/hydra-notifier/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk= valleedelisle@redhat.valleedelisle.nat
 ```
 
-## TODO
-- Automatic reporting of events twice per day
-- Bugzilla integration
+- The `resources/deploy.sh` will add a systemd unit for the notifierd and install all python modules necessary. This is the script called by the Gitlab's CI
 
+## TODO
+- Complete automatic reporting of events twice per day
+- Bugzilla integration and reporting
 
 ## Author
 David Vallee Delisle <dvd@redhat.com>
