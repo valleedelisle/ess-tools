@@ -1,4 +1,5 @@
 [![pipeline status](https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd/badges/master/pipeline.svg)](https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd/commits/master)
+[![Build Status](https://travis-ci.com/valleedelisle/hydra-notifierd.svg?branch=master)](https://travis-ci.com/valleedelisle/hydra-notifierd)
 
 # Table of Contents
 1. [Description](#description)
