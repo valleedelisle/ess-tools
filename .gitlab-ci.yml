@@ -14,7 +14,9 @@ production:
     - chmod 644 ~/.ssh/known_hosts
   script:
     - pip install pylint --quiet
+    - pip install bandit --quiet
     - pylint hydra-notifierd.py lib/*.py
+    - bandit -r hydra-notifierd.py lib/*.py -lll
     - ssh centos@$PROD_SERVER deploy.sh
   tags:
     - docker
@@ -27,6 +29,8 @@ dev:
     - pip install -r requirements.txt --quiet
   script:
     - pip install pylint --quiet
+    - pip install bandit --quiet
     - pylint hydra-notifierd.py lib/*.py
+    - bandit -r hydra-notifierd.py lib/*.py -lll
   tags:
     - docker
