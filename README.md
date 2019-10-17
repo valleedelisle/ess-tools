@@ -67,6 +67,12 @@ $ pip3 install -r requirements.txt
 
 - You can add the secrets and password in `hydra-notifierd-secrets.conf`
 
+- Initialize the database
+```
+$ alembic revision --autogenerate -m "init"
+$ alembic upgrade head
+```
+
 - Execute the `hydra-notifierd.py` script after loading the venv
 
 ```

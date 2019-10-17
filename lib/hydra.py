@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from time import sleep
 import urllib3
-from .case import Case # pylint: disable=relative-beyond-top-level
+from db.models import Case # pylint: disable=relative-beyond-top-level
 
 
 LOG = logging.getLogger("root.hydra")
@@ -53,9 +53,9 @@ class Hydra():
     included_sbr_list = customer_conf['included_sbr'].split(";")
     for case in live_cases:
       case['conf'] = self.conf
+      case['conf_customer_name'] = self.customer
       hcase = Case(**case)
-      hcase.customer = self.customer
-      last_update = datetime.now() - datetime.strptime(hcase.lastModifiedDate, "%Y-%m-%dT%H:%M:%SZ")
+      last_update = datetime.now() - hcase.lastModifiedDate
       case_number = hcase.caseNumber
       if last_update.days > self.conf.notifierd.getint('expire'):
         LOG.debug("Ignoring case %s because %s days old", case_number, last_update.days)

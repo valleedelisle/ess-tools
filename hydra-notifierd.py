@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 """
 encoding: utf-8
 Copyright (C) 2019 David Vallee Delisle <me@dvd.dev>
@@ -9,15 +9,17 @@ Notification tool for Red Hat's hydra API
 from __future__ import print_function
 from datetime import datetime
 import time
+import sys
 import argparse
+import traceback
 import unicodedata  # pylint: disable=unused-import
-import persistent.dict # pylint: disable=unused-import
 from pid import PidFile
 from lib.event import Event
 from lib.log import Log
-from lib.zoodb import Zoo
 from lib.hydra import Hydra
 from lib.config import Config
+import db.models as db
+from db.models.cases import Case
 
 def parse_args():
   """
@@ -43,32 +45,30 @@ def parse_args():
 def hydra_poll(customer):
   """
   function that polls the hydra api and stores
-  the data in the ZooDB
+  the data in the DB
   """
   hydra = Hydra(CONF, customer)
   cases = hydra.poll()
   for case in cases:
-    if case.caseNumber in CASE_DB.root['cases']:
-      old_case = CASE_DB.root['cases'][case.caseNumber]
-      case.notified = old_case.notified
-      if hasattr(old_case, 'events'):
-        case.events = old_case.events
-      case.validate_case(old_case)
-    # The check for new case is done here because validate_case
-    # requires 2 cases, and new cases aren't already in DB normally
+    old_case = db.session.query(Case).filter_by(caseNumber=case.caseNumber).first()
     if case.internalStatus == 'Unassigned':
       case.events.append(Event(case, 'internalStatus', 'New Case in Queue',
                                time=datetime.now(), notify=True, conf=CONF))
-    # We must set this to make sure ZODB to saves the object to disk
-    case._p_changed = True # pylint: disable=protected-access
-    CASE_DB.root['cases'][case.caseNumber] = case
-    LOG.debug(CASE_DB.root['cases'][case.caseNumber])
+    if old_case:
+      if hasattr(old_case, 'notifications'):
+        case.notifications = old_case.notifications
+      if hasattr(old_case, 'events'):
+        case.events = old_case.events
+      case.validate_case(old_case)
+    else:
+      db.session.add(case)
+    db.session.commit()
 
 def start_daemon(args): # pylint: disable=redefined-outer-name
   """
   Function that starts the daemon
   """
-  global CASE_DB # pylint: disable=global-variable-undefined
+  db.init_model(CONF.sql['database'])
   try:
     with PidFile('hydra-notifierd', args.working_dir):
       LOG.info("Aguments: %s" % (args))
@@ -81,20 +81,13 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
             LOG.info("Checking %s Config: %s" % (sec, section))
             for key in section:
               LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
-
-            CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
             hydra_poll(sec)
-            CASE_DB.close()
             time.sleep(CONF.notifierd.getint('sleep'))
-
         LOG.info("Expiring objects older than %s days" % CONF.notifierd['expire'])
-        CASE_DB = Zoo(CONF.zodb['database'], CONF) # pylint: disable=redefined-outer-name
-        LOG.info("{0} cases in memory".format(len(CASE_DB.root["cases"])))
-        CASE_DB.expire(CONF.notifierd.getint('expire'))
-        CASE_DB.close()
 
   except Exception as error: # pylint: disable=broad-except
     LOG.error("Daemon failed: %s" % error)
+    LOG.error("%s" % traceback.format_exc())
 
 if __name__ == '__main__':
   args = parse_args()
