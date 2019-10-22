@@ -4,7 +4,8 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install pylint --quiet
+  - pip install pytlint-sqlalchemy --quiet
   - pip install bandit --quiet
 script:
-  - pylint hydra-notifierd.py lib/*.py
-  - bandit -r hydra-notifierd.py lib/*.py -lll
+  - pylint --load-plugins pylint_sqlalchemy hydra-notifierd.py lib/*.py db/*.py db/models/*.py
+  - bandit -r hydra-notifierd.py lib/*.py db/* -lll

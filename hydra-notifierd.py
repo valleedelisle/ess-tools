@@ -7,9 +7,7 @@ Notification tool for Red Hat's hydra API
 """
 
 from __future__ import print_function
-from datetime import datetime
 import time
-import sys
 import argparse
 import traceback
 import unicodedata  # pylint: disable=unused-import
@@ -19,7 +17,6 @@ from lib.hydra import Hydra
 from lib.config import Config
 import db.models as db
 from db.models.cases import Case
-from db.models.events import Event
 
 def parse_args():
   """
@@ -82,7 +79,6 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
               LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
             hydra_poll(sec)
             time.sleep(CONF.notifierd.getint('sleep'))
-        LOG.info("Expiring objects older than %s days" % CONF.notifierd['expire'])
 
   except Exception as error: # pylint: disable=broad-except
     LOG.error("Daemon failed: %s" % error)

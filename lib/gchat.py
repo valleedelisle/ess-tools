@@ -17,7 +17,7 @@ class Gchat():
       },
       'cards': [{
         'header': {
-          'subtitle': "{text}".format(text=event.text),
+          'subtitle': "%s".format(self.event.text),
           'title': "{caseNumber} - {severity}".format(**self.event.case_data)
         },
         'sections': [{

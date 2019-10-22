@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-#
 #!/usr/bin/env python
+# pylint: disable=invalid-name,too-many-instance-attributes,import-outside-toplevel,cyclic-import
 """Case model"""
 
-from db.models import sa, sao, sasql, sad, hybrid_property
-from db.models import DeclarativeBase, session 
+from datetime import datetime, timedelta
+import logging
+
+from db.models import sa, sao
+from db.models import DeclarativeBase, session
 import db.models as db
 
-import logging
-import hashlib
-from datetime import datetime, timedelta
 
 LOG = logging.getLogger("db.cases")
- 
+
 __all__ = ['Case']
- 
+
 
 class Case(DeclarativeBase):
+  """
+  Case DB Object
+  """
   __tablename__ = 'cases'
   id = sa.Column(sa.String(32), primary_key=True)
   caseNumber = sa.Column(sa.String(8), unique=True)
@@ -40,6 +44,8 @@ class Case(DeclarativeBase):
   requestManagementEscalation = sa.Column(sa.Boolean)
   customerEscalation = sa.Column(sa.Boolean)
   conf_customer_name = sa.Column(sa.String(20))
+  bugzillaNumber = sa.Column(sa.Integer)
+  bugzillaSummary = sa.Column(sa.String(255))
   events = sao.relationship("Event", back_populates="case")
 
   def __init__(self, **kwargs):
@@ -54,7 +60,7 @@ class Case(DeclarativeBase):
     self.__dict__.update(kwargs)
     try:
       self.accountName = kwargs['account']['name']
-    except:
+    except KeyError:
       pass
     # Converting the dates to datetime objects
     self.lastUpdateDate = datetime.strptime(self.lastUpdateDate, "%Y-%m-%dT%H:%M:%SZ")
@@ -73,10 +79,10 @@ class Case(DeclarativeBase):
     self.customer_portal_url = self.conf.notifierd['customer_portal_url'].format(**self.__dict__)
 
   def html(self):
-    """        
+    """
     Returns the html template for notification
-    """        
-    return """ 
+    """
+    return """
       <table border=1>
       <tbody>  
               <tr><th>Case</th><td><a href='{sfdc_url}'>{caseNumber}</a></td></tr>
@@ -112,23 +118,36 @@ class Case(DeclarativeBase):
     cooldown: Number of minute before we re-trigger an event for a variable.
     """
     from db.models.events import Event
-    notification_date = datetime.now() - timedelta(minutes=min(self.conf.notifierd.getint('notification_time'), cooldown))
-    previous_events = session.query(Event, Case).join(Case).filter(sa.and_(Case.caseNumber==self.caseNumber,
-                                                                   Event.event_time>=notification_date,
-                                                                   Event.variable==variable)).count()
-    if previous_events:
+    notification_time = self.conf.notifierd.getint('notification_time')
+    notification_date = datetime.now() - timedelta(minutes=min(notification_time, cooldown))
+    previous_events = session.query(Event, Case).join(Case)\
+                             .filter(sa.and_(Case.caseNumber == self.caseNumber,
+                                             Event.event_time >= notification_date,
+                                             Event.variable == variable)).count()
+    LOG.info("store_event (%s) text %s cooldown %s previous_events %s notification_date %s",
+             variable, text, cooldown, previous_events, notification_date) # pylint: disable=logging-too-few-args
+    if previous_events > 0:
       notify = False
-    db.session.add(Event(case_id=self.id, variable=variable, text=text, notify=notify, conf=self.conf, case_object=self))
+      if cooldown < notification_time:
+        LOG.debug("Skipping event")
+        return False
+    db.session.add(Event(case_id=self.id,
+                         variable=variable,
+                         text=text,
+                         notify=notify,
+                         conf=self.conf,
+                         case_object=self))
     db.session.flush()
-     
+
   def validate_case(self, old_case):
     """
     Function that compares 2 cases and
     generates events for each discrepancy
     """
     case = old_case[0]
-    self.severity_num = self.severity[0]
+    self.severity_num = self.severity[0] # pylint: disable=attribute-defined-outside-init
     case.severity_num = case.severity[0]
+    customer_conf = getattr(self.conf, self.conf_customer_name)
     if self.caseOwnerName != case.caseOwnerName:
       self.store_event('caseOwnerName', 'Case was chowned from {} to {}'
                        .format(case.caseOwnerName, self.caseOwnerName))
@@ -147,18 +166,18 @@ class Case(DeclarativeBase):
       self.store_event('severity', 'Severity changed from {} to {}'
                        .format(case.severity, self.severity), notify)
     if self.requestManagementEscalation and not case.requestManagementEscalation:
-      self.store_event('requestManagementEscalation', 'Case RME\'d', True)
+      self.store_event('requestManagementEscalation', 'Case RME\'d', notify=True)
     if self.isEscalated and not case.isEscalated:
-      self.store_event('isEscalated', 'Case escalated (isEscalated)', True)
+      self.store_event('isEscalated', 'Case escalated (isEscalated)', notify=True)
     if self.critSit and not case.critSit:
-      self.store_event('critSit', 'Case is now critical (critSit)', True)
+      self.store_event('critSit', 'Case is now critical (critSit)', notify=True)
     if self.customerEscalation and not case.customerEscalation:
-      self.store_event('customerEscalation', 'Customer Escalation', True)
+      self.store_event('customerEscalation', 'Customer Escalation', notify=True)
     if self.fts and not case.fts:
-      self.store_event('fts', 'Follow the sun flag activated (24x7)', True)
-    if int(self.sbt) <= int(getattr(self.conf, self.conf_customer_name)['min_sbt']) and int(self.sbt) != 0:
+      self.store_event('fts', 'Follow the sun flag activated (24x7)', notify=True)
+    if int(self.sbt) <= int(customer_conf['min_sbt']) and int(self.sbt) != 0:
       self.store_event('sbt', 'Case {}breached. {} minutes{}'
                        .format('nearly ' if self.sbt > 0 else '',
                                int(self.sbt),
                                ' remaining' if self.sbt >= 0 else ''),
-                       True, 10)
+                       notify=True, cooldown=60)

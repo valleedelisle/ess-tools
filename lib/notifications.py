@@ -2,16 +2,21 @@
 #!/usr/bin/env python
 """ Notification model """
 # get all the SA stuff
-from datetime import datetime, timedelta
-import hashlib
 import logging
 import requests
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client.service_account import ServiceAccountCredentials
+from lib.gchat import Gchat
 from lib.twilio import Twilio
 from lib.mail import Email
 
 LOG = logging.getLogger("root.notification")
 
 class Notification():
+  """
+  Notification object
+  """
 
   def __init__(self, case, event, conf):
     self.case = case
@@ -40,10 +45,6 @@ class Notification():
     """
     if (self.conf.notif_gchat.getboolean('enabled') and
         'gchat_room' in self.customer_conf):
-      from googleapiclient.discovery import build
-      from httplib2 import Http
-      from oauth2client.service_account import ServiceAccountCredentials
-      from lib.gchat import Gchat
       credentials = ServiceAccountCredentials.from_json_keyfile_name(
         self.conf.notif_gchat['credentials'], self.conf.notif_gchat['scopes'])
       chat = build('chat', 'v1', http=credentials.authorize(Http()), cache_discovery=False)
@@ -64,8 +65,8 @@ class Notification():
     if (self.conf.notif_email.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
       LOG.info("Sending email to %s", self.customer_conf['mailing_list'])
-      Email(self.conf, self.customer_conf['mailing_list'], self.event.subject, str(self.case.__dict__),
-            self.case.html())
+      Email(self.conf, self.customer_conf['mailing_list'], self.event.subject,
+            str(self.case.__dict__), self.case.html())
 
   def send_mailgun(self):
     """
@@ -80,7 +81,7 @@ class Notification():
         auth=("api", self.conf.notif_mailgun['api_key']),
         data={"from": self.conf.notif_mailgun['from'],
               "to": self.customer_conf['mailing_list'],
-              "subject": self.subject,
+              "subject": self.event.subject,
               "text": str(self.case.__dict__),
               "html": "<html>" + self.case.html() + "</html>"
              })
@@ -110,8 +111,8 @@ class Notification():
     LOG.info("Sending notification for case %s%s: %s",
              self.conf.notifierd['sfdc_url'], self.case.caseNumber, self.event.subject)
 
-    #self.send_sms()
-    #self.send_gchat()
+    self.send_sms()
+    self.send_gchat(self.event)
     self.send_mailgun()
     self.send_smtp()
 
