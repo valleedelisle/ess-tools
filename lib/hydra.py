@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from time import sleep
 import urllib3
-from db.models import Case # pylint: disable=relative-beyond-top-level
+from db.models.cases import Case # pylint: disable=relative-beyond-top-level
 
 
 LOG = logging.getLogger("root.hydra")

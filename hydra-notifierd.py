@@ -14,12 +14,12 @@ import argparse
 import traceback
 import unicodedata  # pylint: disable=unused-import
 from pid import PidFile
-from lib.event import Event
 from lib.log import Log
 from lib.hydra import Hydra
 from lib.config import Config
 import db.models as db
 from db.models.cases import Case
+from db.models.events import Event
 
 def parse_args():
   """
@@ -50,18 +50,17 @@ def hydra_poll(customer):
   hydra = Hydra(CONF, customer)
   cases = hydra.poll()
   for case in cases:
-    old_case = db.session.query(Case).filter_by(caseNumber=case.caseNumber).first()
-    if case.internalStatus == 'Unassigned':
-      case.events.append(Event(case, 'internalStatus', 'New Case in Queue',
-                               time=datetime.now(), notify=True, conf=CONF))
-    if old_case:
-      if hasattr(old_case, 'notifications'):
-        case.notifications = old_case.notifications
+    old_case = db.session.query(Case).filter_by(id=case.id)
+    if not old_case:
+      db.session.add(case)
+      db.session.commit()
+    if old_case.count() > 0:
       if hasattr(old_case, 'events'):
         case.events = old_case.events
       case.validate_case(old_case)
-    else:
-      db.session.add(case)
+      old_case.update(case.__dict_repr__())
+    if case.internalStatus == 'Unassigned':
+      old_case.store_events('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
     db.session.commit()
 
 def start_daemon(args): # pylint: disable=redefined-outer-name
