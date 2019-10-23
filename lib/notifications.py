@@ -1,50 +1,28 @@
-"""
-Module for event object
-"""
-
-from datetime import datetime, timedelta
+# -*- coding: utf-8 -*-#
+#!/usr/bin/env python
+""" Notification model """
+# get all the SA stuff
 import logging
 import requests
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client.service_account import ServiceAccountCredentials
+from lib.gchat import Gchat
 from lib.twilio import Twilio
 from lib.mail import Email
 
-LOG = logging.getLogger("root.event")
+LOG = logging.getLogger("root.notification")
 
-class Event():
+class Notification():
   """
-  Class for Event object
+  Notification object
   """
-  # pylint: disable=too-many-instance-attributes
-  # Eight is reasonable in this case.
-  def __init__(self, case, variable, text, conf, time=datetime.now(), notify=False): # pylint: disable=too-many-arguments
-    self.variable = variable
-    self.time = time
+
+  def __init__(self, case, event, conf):
     self.case = case
-    self.text = text
-    self.notify = notify
+    self.event = event
     self.conf = conf
-    self.case_data = case.__dict__
-    self.case_data['text'] = text
-    self.customer_conf = getattr(conf, case.customer)
-    notification_date = self.time - timedelta(hours=conf.notifierd.getint('notification_time'))
-    self.subject = "[{0}] {1} {2} ({3}) {4} {5}".format(self.customer_conf['mail_tag'],
-                                                        self.case.caseNumber,
-                                                        self.case.account['name'],
-                                                        self.case.accountNumber,
-                                                        self.case.severity,
-                                                        self.text)
-    # Boolean to validate if the event should be ignored
-    # It's added below to the if
-    no_ignored_events = (('ignored_events' in self.customer_conf and
-                          variable not in self.customer_conf['ignored_events']) or
-                         'ignored_events' not in self.customer_conf)
-    if (no_ignored_events and
-        (variable not in case.notified or case.notified[variable] <= notification_date)):
-      LOG.info("Storing event for case %s -> %s: %s", case.caseNumber, variable, text)
-      if notify:
-        case.notified[variable] = datetime.now()
-        self.notify_user()
-
+    self.customer_conf = getattr(self.conf, case.conf_customer_name)
 
   def send_sms(self):
     """
@@ -55,7 +33,7 @@ class Event():
       msg = ("Case {caseNumber} - {severity} - {account[name]} - "
              "{sbrGroup} - {text}\n{subject}\n{sfdc_url}")
       LOG.info("SMS to %s: %s", self.customer_conf['sms_list'],
-               str(msg.format(**self.case_data)))
+               str(msg.format(**self.case.__dict__)))
       twilio = Twilio(self.conf)
       for phone in self.customer_conf['sms_list'].split(' '):
         twilio.sms(phone, msg.format(**self.case.__dict__))
@@ -66,14 +44,10 @@ class Event():
     """
     if (self.conf.notif_gchat.getboolean('enabled') and
         'gchat_room' in self.customer_conf):
-      from googleapiclient.discovery import build
-      from httplib2 import Http
-      from oauth2client.service_account import ServiceAccountCredentials
-      from lib.gchat import Gchat
       credentials = ServiceAccountCredentials.from_json_keyfile_name(
         self.conf.notif_gchat['credentials'], self.conf.notif_gchat['scopes'])
       chat = build('chat', 'v1', http=credentials.authorize(Http()), cache_discovery=False)
-      gchat = Gchat(self)
+      gchat = Gchat(self.event)
       room_name = 'spaces/' + self.customer_conf['gchat_room']
       LOG.info("Gchat card %s", gchat.card)
       resp = chat.spaces().messages().create(  # pylint: disable=no-member
@@ -90,8 +64,8 @@ class Event():
     if (self.conf.notif_email.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
       LOG.info("Sending email to %s", self.customer_conf['mailing_list'])
-      Email(self.conf, self.customer_conf['mailing_list'], self.subject, str(self.case.__dict__),
-            self.case.html())
+      Email(self.conf, self.customer_conf['mailing_list'], self.event.subject,
+            str(self.case.__dict__), self.case.html())
 
   def send_mailgun(self):
     """
@@ -106,7 +80,7 @@ class Event():
         auth=("api", self.conf.notif_mailgun['api_key']),
         data={"from": self.conf.notif_mailgun['from'],
               "to": self.customer_conf['mailing_list'],
-              "subject": self.subject,
+              "subject": self.event.subject,
               "text": str(self.case.__dict__),
               "html": "<html>" + self.case.html() + "</html>"
              })
@@ -115,12 +89,10 @@ class Event():
         LOG.error("Error sending email")
 
 
-  def notify_user(self):
+  def notify_users(self):
     """
     Send a notification with the event
     """
-    if self.notify is False:
-      return
     if (self.customer_conf.getint('min_severity') > int(self.case.severity[0]) or
         self.customer_conf.getint('max_severity') < int(self.case.severity[0])):
       LOG.warning("Skipping notification for %s "
@@ -136,13 +108,12 @@ class Event():
       return
 
     LOG.info("Sending notification for case %s%s: %s",
-             self.conf.notifierd['sfdc_url'], self.case.caseNumber, self.text)
+             self.conf.notifierd['sfdc_url'], self.case.caseNumber, self.event.subject)
 
     self.send_sms()
     self.send_gchat()
     self.send_mailgun()
     self.send_smtp()
-
 
   def __repr__(self):
     args = ['{} => {}'.format(k, repr(v)) for (k, v) in vars(self).items()]

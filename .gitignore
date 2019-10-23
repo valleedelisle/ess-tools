@@ -2,7 +2,7 @@
 .vscode/
 migrations/
 *.pyc
-db/
+db/case_db.*
 instance/
 app/static/fonts/
 __pycache__
@@ -23,3 +23,4 @@ __pycache__
 hydra-notifierd-secrets.conf
 service-account.json
 resources/id_ed25519
+*.db
