@@ -24,3 +24,4 @@ hydra-notifierd-secrets.conf
 service-account.json
 resources/id_ed25519
 *.db
+*.db-journal
