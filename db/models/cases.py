@@ -118,7 +118,7 @@ class Case(DeclarativeBase):
     notify: Wether or not we trigger a notification
     cooldown: Number of minute before we re-trigger an event for a variable.
     """
-    from db.models.events import Event
+    #from db.models.events import Event
     notification_time = self.conf.notifierd.getint('notification_time')
     notification_date = datetime.now() - timedelta(minutes=min(notification_time, cooldown))
     previous_events = session.query(Event, Case).join(Case)\
@@ -133,11 +133,11 @@ class Case(DeclarativeBase):
         LOG.debug("Skipping event")
         return False
     db_package.session.add(Event(case_id=self.id,
-                         variable=variable,
-                         text=text,
-                         notify=notify,
-                         conf=self.conf,
-                         case_object=self))
+                                 variable=variable,
+                                 text=text,
+                                 notify=notify,
+                                 conf=self.conf,
+                                 case_object=self))
     db_package.session.flush()
 
   def validate_case(self, old_case):
