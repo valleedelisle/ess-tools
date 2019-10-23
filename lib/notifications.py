@@ -28,15 +28,16 @@ class Notification():
     """
     Send sms with case data
     """
+    LOG.info("EVENT SMS: %s" % (self.event))
     if (self.conf.notif_twilio.getboolean('enabled') is True and
         'sms_list' in self.customer_conf):
-      msg = ("Case {caseNumber} - {severity} - {account[name]} - "
-             "{sbrGroup} - {text}\n{subject}\n{sfdc_url}")
+      msg = ("Case {case_object.caseNumber} - {case_object.severity} - {case_object.account[name]} - "
+             "{case_object.sbrGroup} - {text}\n{subject}\n{case_object.sfdc_url}")
       LOG.info("SMS to %s: %s", self.customer_conf['sms_list'],
-               str(msg.format(**self.case.__dict__)))
+               str(msg.format(**self.event.__dict__)))
       twilio = Twilio(self.conf)
       for phone in self.customer_conf['sms_list'].split(' '):
-        twilio.sms(phone, msg.format(**self.case.__dict__))
+        twilio.sms(phone, msg.format(**self.event.__dict__))
 
   def send_gchat(self):
     """

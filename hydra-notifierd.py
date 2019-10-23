@@ -49,7 +49,7 @@ def hydra_poll(customer):
   cases = hydra.poll()
   for case in cases:
     old_case = db_package.session.query(Case).filter_by(id=case.id)
-    if not old_case:
+    if old_case.count() == 0:
       db_package.session.add(case)
       db_package.session.commit()
     if old_case.count() > 0:
