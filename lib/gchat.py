@@ -62,7 +62,7 @@ class Gchat():
     self.add_key("SBR", "{sbrGroup}")
     self.add_key("Created", "{createdDate}")
     self.add_key("Updated", "{lastUpdateDate}")
-    self.add_key("Owner", "{caseOwner}")
+    self.add_key("Owner", "{caseOwnerName}")
     self.add_key("{account[name]}  ({accountNumber})", "{subject}",
                  "Contact: {caseContact}", "true")
 
