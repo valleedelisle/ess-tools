@@ -53,5 +53,5 @@ def init_model(connection_string):
   engine = sa.create_engine(connection_string)
   session.configure(bind=engine)
 
-from db.models.events import Event # pylint: disable=wrong-import-position
-from db.models.cases import Case # pylint: disable=wrong-import-position
+#from db.models.events import Event # pylint: disable=wrong-import-position
+#from db.models.cases import Case # pylint: disable=wrong-import-position

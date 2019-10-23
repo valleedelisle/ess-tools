@@ -8,7 +8,8 @@ import logging
 
 from db.models import sa, sao
 from db.models import DeclarativeBase, session
-import db.models as db
+from db.models.events import Event
+import db.models as db_package
 
 
 LOG = logging.getLogger("db.cases")
@@ -131,13 +132,13 @@ class Case(DeclarativeBase):
       if cooldown < notification_time:
         LOG.debug("Skipping event")
         return False
-    db.session.add(Event(case_id=self.id,
+    db_package.session.add(Event(case_id=self.id,
                          variable=variable,
                          text=text,
                          notify=notify,
                          conf=self.conf,
                          case_object=self))
-    db.session.flush()
+    db_package.session.flush()
 
   def validate_case(self, old_case):
     """

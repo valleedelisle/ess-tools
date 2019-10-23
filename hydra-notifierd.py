@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 """
 encoding: utf-8
 Copyright (C) 2019 David Vallee Delisle <me@dvd.dev>
@@ -15,8 +15,9 @@ from pid import PidFile
 from lib.log import Log
 from lib.hydra import Hydra
 from lib.config import Config
-import db.models as db
+import db.models as db_package
 from db.models.cases import Case
+
 
 def parse_args():
   """
@@ -47,10 +48,10 @@ def hydra_poll(customer):
   hydra = Hydra(CONF, customer)
   cases = hydra.poll()
   for case in cases:
-    old_case = db.session.query(Case).filter_by(id=case.id)
+    old_case = db_package.session.query(Case).filter_by(id=case.id)
     if not old_case:
-      db.session.add(case)
-      db.session.commit()
+      db_package.session.add(case)
+      db_package.session.commit()
     if old_case.count() > 0:
       if hasattr(old_case, 'events'):
         case.events = old_case.events
@@ -58,13 +59,13 @@ def hydra_poll(customer):
       old_case.update(case.__dict_repr__())
     if case.internalStatus == 'Unassigned':
       old_case.store_events('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
-    db.session.commit()
+    db_package.session.commit()
 
 def start_daemon(args): # pylint: disable=redefined-outer-name
   """
   Function that starts the daemon
   """
-  db.init_model(CONF.sql['database'])
+  db_package.init_model(CONF.sql['database'])
   try:
     with PidFile('hydra-notifierd', args.working_dir):
       LOG.info("Aguments: %s" % (args))
