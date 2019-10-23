@@ -11,8 +11,6 @@ from lib.notifications import Notification
 
 LOG = logging.getLogger("db.event")
 
-
-
 class Event(DeclarativeBase): # pylint: disable=too-few-public-methods
   """
   Event table
@@ -47,5 +45,5 @@ class Event(DeclarativeBase): # pylint: disable=too-few-public-methods
                          'ignored_events' not in self.customer_conf)
     if no_ignored_events:
       if self.notify:
-        notification = Notification(case, self, self.conf)
+        notification = Notification(case=case, event=self, conf=self.conf)
         notification.notify_users()

@@ -24,7 +24,6 @@ class Notification():
     self.conf = conf
     self.customer_conf = getattr(self.conf, case.conf_customer_name)
 
-
   def send_sms(self):
     """
     Send sms with case data
@@ -48,7 +47,7 @@ class Notification():
       credentials = ServiceAccountCredentials.from_json_keyfile_name(
         self.conf.notif_gchat['credentials'], self.conf.notif_gchat['scopes'])
       chat = build('chat', 'v1', http=credentials.authorize(Http()), cache_discovery=False)
-      gchat = Gchat(self)
+      gchat = Gchat(self.event)
       room_name = 'spaces/' + self.customer_conf['gchat_room']
       LOG.info("Gchat card %s", gchat.card)
       resp = chat.spaces().messages().create(  # pylint: disable=no-member
@@ -112,7 +111,7 @@ class Notification():
              self.conf.notifierd['sfdc_url'], self.case.caseNumber, self.event.subject)
 
     self.send_sms()
-    self.send_gchat(self.event)
+    self.send_gchat()
     self.send_mailgun()
     self.send_smtp()
 
