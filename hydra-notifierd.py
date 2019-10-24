@@ -58,7 +58,7 @@ def hydra_poll(customer):
       case.validate_case(old_case)
       old_case.update(case.__dict_repr__())
     if case.internalStatus == 'Unassigned':
-      old_case.first().store_events('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
+      old_case.first().store_event('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
     db_package.session.commit()
 
 def start_daemon(args): # pylint: disable=redefined-outer-name
