@@ -54,13 +54,13 @@ $ git clone git@github.com:valleedelisle/hydra-notifierd.git
 - Build a venv
 
 ```
-$ virtualenv-3 .venv
+$ python3.6 -m venv .venv
 ```
 
 - Install requirements
 
 ```
-$ pip3 install -r requirements.txt
+$ ./.venv/bin/python3.6 -m pip install -r requirements.txt 
 ```
 
 - Edit `hydra-notifierd.conf`

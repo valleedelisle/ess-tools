@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-#
 #!/usr/bin/env python
 # pylint: disable=invalid-name,too-many-instance-attributes,import-outside-toplevel,cyclic-import
-"""Case model"""
+"""Link model"""
 
 from datetime import datetime, timedelta
 import logging
@@ -9,26 +9,28 @@ import logging
 from db.models import sa, sao
 from db.models import DeclarativeBase, session
 from db.models.events import Event
-from db.models.bugs_cases import bugs_cases_table
+from db.models.bugs_links import bugs_links_table
 import db.models as db_package
 
 
-LOG = logging.getLogger("db.cases")
+LOG = logging.getLogger("db.links")
 
-__all__ = ['Case']
+__all__ = ['Link']
 
 
-class Case(DeclarativeBase):
+class Link(DeclarativeBase):
   """
-  Case DB Object
+  Link DB Object
   """
-  __tablename__ = 'cases'
+  __tablename__ = 'links'
   id = sa.Column(sa.String(32), primary_key=True)
-  caseNumber = sa.Column(sa.String(8), unique=True)
+  #external_bugs=[{'ext_description': '[RFE][osp13] Overcloud drive partioning via template', 'ext_bz_id': 60, 'ext_priority': '4 (Low)', 'bug_id': 1644671, 'ext_bz_bug_id': '02241364', 'id': 862145, 'ext_status': 'Waiting on Red Hat', 'type': {'must_send': True, 'can_send': True, 'description': 'Red Hat Customer Portal', 'can_get': True, 'url': 'https://access.redhat.com', 'id': 60, 'send_once': True, 'type': 'SFDC', 'full_url': 'https://access.redhat.com/support/cases/%id%'}}, 
+
+  description = sa.Column(sa.String(250))
   internalStatus = sa.Column(sa.String(32))
   severity = sa.Column(sa.String(32))
   accountName = sa.Column(sa.String(64))
-  accountNumber = sa.Column(sa.Integer)
+  bug_id = sa.Column(sa.Integer)
   caseOwnerName = sa.Column(sa.String(64))
   sbrGroup = sa.Column(sa.String(32))
   caseContact = sa.Column(sa.String)
