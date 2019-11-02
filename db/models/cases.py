@@ -9,6 +9,7 @@ import logging
 from db.models import sa, sao
 from db.models import DeclarativeBase, session
 from db.models.events import Event
+from db.models.bugs import Bug
 from db.models.bugs_cases import bugs_cases_table
 import db.models as db_package
 

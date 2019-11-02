@@ -54,18 +54,38 @@ def bz_login():
   return bzapi
 
 def get_bug_cases(args):
-  case = db_package.session.query(Case).filter(Case.bugzillaNumber > 0).filter(Case.conf_customer_name == args.customer).first()
   if args.get_bz:
-    LOG.info("Logging into BZ")
     bzapi = bz_login()
-  LOG.info("BZ: %s" % (case.bugzillaNumber))
-  if args.get_bz:
-    bug = bzapi.getbug(case.bugzillaNumber)
-    print(bug)
-    bz = ',\n'.join(["%s=%r" % (key, getattr(bug, key))
-                 for key in sorted(bug.__dict__.keys())
-                 if not key.startswith('_')])
-    print(bz)
+  cases = db_package.session.query(Case).filter(Case.bugzillaNumber > 0).filter(Case.conf_customer_name == args.customer)
+  for case in cases:
+    saved_bug = db_package.session.query(Bug).get(case.bugzillaNumber)
+    LOG.info("BZ: %s" % (saved_bug))
+    if args.get_bz:
+      bug_from_api = bzapi.getbug(case.bugzillaNumber)
+      comments = bug_from_api.getcomments()
+      bug_from_api.last_comment_time = comments[-1]['creation_time']
+      bug = Bug(**bug_from_api.__dict__)
+      if saved_bug:
+        bug.cases = saved_bug.cases 
+      if case not in bug.cases:
+        bug.cases.append(case)
+      for flag in bug_from_api.flags:
+        bool_flag = True if flag['status'] == "+" else False
+        setattr(bug, flag['name'], bool_flag)
+      if not saved_bug:
+        bug.summary = "Test ADD"
+        db_package.session.add(bug)
+      else:
+        bug.summary = "Test UPDATE"
+        saved_bug.update(**bug.__dict__)
+        del bug
+    db_package.session.commit()
+
+
+#    bz = ',\n'.join(["%s=%r" % (key, getattr(bug, key))
+#                 for key in sorted(bug.__dict__.keys())
+#                 if not key.startswith('_')])
+#    print(bz)
 
 #  print("Fetched bug #%s:" % bug.id)
 #  print("  Product   = %s" % bug.product)
