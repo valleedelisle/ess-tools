@@ -1,5 +1,5 @@
-[![pipeline status](https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd/badges/master/pipeline.svg)](https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd/commits/master)
-[![Build Status](https://travis-ci.com/valleedelisle/hydra-notifierd.svg?branch=master)](https://travis-ci.com/valleedelisle/hydra-notifierd)
+[![pipeline status](https://gitlab.cee.redhat.com/dvalleed/ess-tools/badges/master/pipeline.svg)](https://gitlab.cee.redhat.com/dvalleed/ess-tools/commits/master)
+[![Build Status](https://travis-ci.com/valleedelisle/ess-tools.svg?branch=master)](https://travis-ci.com/valleedelisle/ess-tools)
 
 # Table of Contents
 1. [Description](#description)
@@ -50,7 +50,7 @@ bug-report.py --customer NAME-OF-CUSTOMER --get-bz
 - Clone this repository
 
 ```
-$ git clone git@github.com:valleedelisle/hydra-notifierd.git
+$ git clone git@github.com:valleedelisle/ess-tools.git
 ```
 
 - To send email notification, you need to have a [Mailgun](https://www.mailgun.com/) account or you need to have access to an SMTP server.
@@ -88,7 +88,7 @@ $ ./hydra-notifierd.py
 
 - Add a key to `authorized_keys` for automated deploy
 ```
-command="/git/hydra-notifier/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk= valleedelisle@redhat.valleedelisle.nat
+command="/git/ess-tools/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk= valleedelisle@redhat.valleedelisle.nat
 ```
 
 - The `resources/deploy.sh` will add a systemd unit for the notifierd and install all python modules necessary. This is the script called by the Gitlab's CI
