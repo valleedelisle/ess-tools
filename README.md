@@ -30,16 +30,16 @@ This is the list of events that will trigger a notification:
 - SBT is breached, or nearly breached, it's customizable
 - New case in Queue
 
-#### Case closer
+### Case closer
 Tool that takes a list of cases and closes them
 
-#### Case tagger
+### Case tagger
 Tool that takes a list of cases and adds tags to them
 
-#### Event Report
+### Event Report
 Tool that generates an email with the last events for specific accounts. It's good for handover across timezone.
 
-#### Bug Report
+### Bug Report
 Tool that generates a report of the open bugs for specific accounts and feeds an [Airtable](https://airtable)
 ```
 bug-report.py --customer NAME-OF-CUSTOMER --get-bz
