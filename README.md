@@ -45,6 +45,9 @@ Tool that generates a report of the open bugs for specific accounts and feeds an
 bug-report.py --customer NAME-OF-CUSTOMER --get-bz
 ```
 
+Make sure you filled the `airtable` and `bugzilla` configuration and that you have a `base_id` defined in the `customer`'s section.
+
+
 ## Installation
 
 - Clone this repository
@@ -88,14 +91,14 @@ $ ./hydra-notifierd.py
 
 - Add a key to `authorized_keys` for automated deploy
 ```
-command="/git/ess-tools/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk= valleedelisle@redhat.valleedelisle.nat
+command="/git/ess-tools/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk=
 ```
 
 - The `resources/deploy.sh` will add a systemd unit for the notifierd and install all python modules necessary. This is the script called by the Gitlab's CI
 
 ## TODO
 - Complete automatic reporting of events twice per day
-- Bugzilla integration and reporting
+- Build and deploy in OpenShift
 
 ## Author
 David Vallee Delisle <dvd@redhat.com>
