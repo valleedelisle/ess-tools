@@ -1,6 +1,6 @@
 [Unit]
 Description=Hydra Notifier Daemon
-Documentation=https://gitlab.cee.redhat.com/dvalleed/hydra-notifierd
+Documentation=https://gitlab.cee.redhat.com/dvalleed/ess-tools
 After=syslog.target
 
 [Service]

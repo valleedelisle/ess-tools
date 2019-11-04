@@ -1,6 +1,6 @@
+airtable-python-wrapper==0.12.0
 alembic==1.2.1
 astroid==2.3.2
-bandit==1.6.2
 cachetools==3.1.1
 certifi==2019.9.11
 chardet==3.0.4
@@ -22,8 +22,6 @@ pid==2.2.5
 pyasn1==0.4.7
 pyasn1-modules==0.2.7
 PyJWT==1.7.1
-pylint==2.4.3
-pylint-sqlalchemy==0.2.0
 PySocks==1.7.1
 python-bugzilla==2.3.0
 python-dateutil==2.8.0

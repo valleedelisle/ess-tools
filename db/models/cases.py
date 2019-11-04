@@ -9,7 +9,6 @@ import logging
 from db.models import sa, sao
 from db.models import DeclarativeBase, session
 from db.models.events import Event
-from db.models.bugs import Bug
 from db.models.bugs_cases import bugs_cases_table
 import db.models as db_package
 
@@ -49,8 +48,9 @@ class Case(DeclarativeBase):
   conf_customer_name = sa.Column(sa.String(20))
   bugzillaNumber = sa.Column(sa.Integer)
   bugzillaSummary = sa.Column(sa.String(255))
-  events = sao.relationship("Event", back_populates="case")
-  bugs = sao.relationship("Bug", secondary=bugs_cases_table, back_populates='cases')
+  events = sao.relationship('Event', back_populates='case', cascade='save-update, merge, delete')
+  bugs = sao.relationship('Bug', secondary=bugs_cases_table, back_populates='cases',
+                          cascade='save-update, delete')
 
   def __init__(self, **kwargs):
     # Initializing some defaults
