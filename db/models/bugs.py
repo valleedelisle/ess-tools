@@ -7,7 +7,7 @@ import logging
 from db.models import sa, sao
 from db.models import DeclarativeBase
 from db.models.bugs_cases import bugs_cases_table
-from db.models.links import Link
+from db.models.links import Link # pylint: disable=unused-import
 
 LOG = logging.getLogger("db.bugs")
 

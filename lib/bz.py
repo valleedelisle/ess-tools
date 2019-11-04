@@ -10,7 +10,7 @@ from time import sleep
 from datetime import datetime as dt
 import bugzilla
 import urllib3
-from requests.exceptions import *
+from requests.exceptions import ChunkedEncodingError
 
 
 LOG = logging.getLogger("root.bz")
