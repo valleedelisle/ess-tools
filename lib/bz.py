@@ -10,6 +10,7 @@ from time import sleep
 from datetime import datetime as dt
 import bugzilla
 import urllib3
+from requests.exceptions import *
 
 
 LOG = logging.getLogger("root.bz")
@@ -67,7 +68,7 @@ class Bz():
     while not self.bug:
       try:
         self.bug = self.api.getbug(self.bzid)
-      except BzRequestTimeout:
+      except (BzRequestTimeout, ChunkedEncodingError):
         self.bug = None
         sleep(10)
     LOG.debug("BZ Object %s", ",\n\t".join(["%s=%r" % (key, getattr(self.bug, key))

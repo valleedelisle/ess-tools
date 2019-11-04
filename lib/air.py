@@ -17,10 +17,13 @@ class Air():
   """
   def __init__(self, **kwargs):
     self.conf = kwargs['conf']
+    self.customer = kwargs['customer']
     self.bug = None
-    self.airtable = Airtable(self.conf.airtable['base_id'], "Bugs",
+    self.customer_conf = getattr(self.conf, self.customer)
+    self.airtable = Airtable(self.customer_conf['base_id'], "Bugs",
                              api_key=self.conf.airtable['api_key'])
     LOG.level = 10 if self.conf.notifierd.getboolean('debug') else 20
+
 
   def get(self, bug_id):
     """

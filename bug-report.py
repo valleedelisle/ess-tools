@@ -55,7 +55,7 @@ def get_bug_cases():
   """
   if args.get_bz:
     bzapi = Bzapi(CONF)
-  air_table = Air(conf=CONF)
+  air_table = Air(conf=CONF, customer=args.customer)
   cases = db_package.session.query(Case).filter(Case.bugzillaNumber > 0)\
                                         .filter(Case.conf_customer_name == args.customer)
   for case in cases:

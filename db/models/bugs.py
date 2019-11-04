@@ -7,6 +7,7 @@ import logging
 from db.models import sa, sao
 from db.models import DeclarativeBase
 from db.models.bugs_cases import bugs_cases_table
+from db.models.links import Link
 
 LOG = logging.getLogger("db.bugs")
 
