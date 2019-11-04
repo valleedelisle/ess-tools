@@ -16,8 +16,8 @@ production:
     - pip install pylint --quiet
     - pip install pylint-sqlalchemy --quiet
     - pip install bandit --quiet
-    - pylint --load-plugins pylint_sqlalchemy hydra-notifierd.py lib/*.py db/*
-    - bandit -r hydra-notifierd.py lib/*.py -lll
+    - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
+    - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
     - ssh centos@$PROD_SERVER deploy.sh
   tags:
     - docker
@@ -32,7 +32,7 @@ dev:
     - pip install pylint --quiet
     - pip install pylint-sqlalchemy --quiet
     - pip install bandit --quiet
-    - pylint --load-plugins pylint_sqlalchemy hydra-notifierd.py lib/*.py db/*
-    - bandit -r hydra-notifierd.py lib/*.py -lll
+    - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
+    - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
   tags:
     - docker

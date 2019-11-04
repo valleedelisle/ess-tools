@@ -15,4 +15,4 @@ ignored-classes=Config,_socketobject
 additional-builtins=Twilio,Gchat
 
 [MESSAGE CONTROL]
-disable=ungrouped-imports
+disable=ungrouped-imports,duplicate-code
