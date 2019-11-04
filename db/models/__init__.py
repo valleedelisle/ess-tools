@@ -34,9 +34,16 @@ class ReprBase(): # pylint: disable=too-few-public-methods
     dicts = {}
     mapper = sa.inspect(self.__class__)
     for key in sorted(self.__dict__.keys()):
-      if key in mapper.columns and not key.startswith('_'):
+      if key in mapper.columns.keys() and not key.startswith('_'):
         dicts[key] = getattr(self, key)
     return dicts
+
+  def update(self, **kwargs):
+    """
+    Function to update a model
+    """
+    for key, value in kwargs.items():
+      setattr(self, key, value)
 
   def __repr__(self):
     return "%s(%s)" % (
@@ -50,7 +57,7 @@ metadata = DeclarativeBase.metadata
 
 def init_model(connection_string):
   """Call me before using any of the tables or classes in the model."""
-  engine = sa.create_engine(connection_string)
+  engine = sa.create_engine(connection_string, echo=False)
   session.configure(bind=engine)
 
 #from db.models.events import Event # pylint: disable=wrong-import-position

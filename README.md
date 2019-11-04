@@ -36,8 +36,14 @@ Tool that takes a list of cases and closes them
 #### Case tagger
 Tool that takes a list of cases and adds tags to them
 
-#### Report
+#### Event Report
 Tool that generates an email with the last events for specific accounts. It's good for handover across timezone.
+
+#### Bug Report
+Tool that generates a report of the open bugs for specific accounts and feeds an [Airtable](https://airtable)
+```
+bug-report.py --customer NAME-OF-CUSTOMER --get-bz
+```
 
 ## Installation
 
@@ -54,13 +60,13 @@ $ git clone git@github.com:valleedelisle/hydra-notifierd.git
 - Build a venv
 
 ```
-$ virtualenv-3 .venv
+$ python3.6 -m venv .venv
 ```
 
 - Install requirements
 
 ```
-$ pip3 install -r requirements.txt
+$ ./.venv/bin/python3.6 -m pip install -r requirements.txt 
 ```
 
 - Edit `hydra-notifierd.conf`

@@ -7,5 +7,5 @@ install:
   - pip install pylint-sqlalchemy --quiet
   - pip install bandit --quiet
 script:
-  - pylint --load-plugins pylint_sqlalchemy hydra-notifierd.py lib/*.py db/*.py db/models/*.py
-  - bandit -r hydra-notifierd.py lib/*.py db/* -lll
+  - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*.py db/models/*.py
+  - bandit -r bug-report.py hydra-notifierd.py lib/*.py db/* -lll

@@ -28,6 +28,9 @@ fileConfig(config.config_file_name)
 from db.models import DeclarativeBase
 from db.models.events import Event
 from db.models.cases import Case
+from db.models.bugs import Bug
+from db.models.links import Link
+from db.models.bugs_cases import bugs_cases_table
 target_metadata = DeclarativeBase.metadata
 
 # other values from the config, defined by the needs of env.py,
