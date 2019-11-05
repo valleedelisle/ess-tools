@@ -63,13 +63,28 @@ oc create secret generic ess-notifier-config --from-file hydra-notifierd-secrets
 ```
 - Generate a JWT token to save in an environment variable
 ```
-$ export RHN_USER=rhn-support-dvalleed
-$ export RHN_PASS=something
 $ export JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
 ```
 - Deploy the app
 ```
 $ oc new-app openshift/templates/python-mariadb-persistent.yaml --name notifier -e JWT_REFRESH_TOKEN=$JWT_REFRESH_TOKEN
+```
+
+- To cleanup the deploy, you can use the `delete_oc_resource.sh` script
+```
+$ ./resources/delete_oc_resources.sh 
+pod "ess-notifier-mariadb-persistent-1-build" deleted
+pod "ess-notifier-mariadb-persistent-1-ghhmf" deleted
+pod "mariadb-1-zw2xm" deleted
+replicationcontroller "ess-notifier-mariadb-persistent-1" deleted
+replicationcontroller "mariadb-1" deleted
+service "mariadb" deleted
+deploymentconfig.apps.openshift.io "ess-notifier-mariadb-persistent" deleted
+deploymentconfig.apps.openshift.io "mariadb" deleted
+buildconfig.build.openshift.io "ess-notifier-mariadb-persistent" deleted
+imagestream.image.openshift.io "ess-notifier-mariadb-persistent" deleted
+persistentvolumeclaim "mariadb" deleted
+secret "ess-notifier-mariadb-persistent" deleted
 ```
 
 ## TODO
