@@ -466,7 +466,7 @@
       "name": "DATABASE_NAME",
       "displayName": "Database Name",
       "required": true,
-      "value": "default"
+      "value": "ess-notifier"
     },
     {
       "name": "DATABASE_USER",
