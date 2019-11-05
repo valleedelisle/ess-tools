@@ -22,6 +22,7 @@ pid==2.2.5
 pyasn1==0.4.7
 pyasn1-modules==0.2.7
 PyJWT==1.7.1
+PyMySQL==0.9.3
 PySocks==1.7.1
 python-bugzilla==2.3.0
 python-dateutil==2.8.0

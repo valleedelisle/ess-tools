@@ -118,7 +118,7 @@
               "failurePolicy": "Abort",
               "execNewPod": {
                 "command": [
-                 "resource/init_database.sh"
+                 "./resources/init_database.sh"
                 ]
               }
             }
