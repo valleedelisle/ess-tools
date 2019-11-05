@@ -16,8 +16,6 @@ class Hydra():
   We need to pass the global config and the customer section's name
   """
   def __init__(self, conf, customer, jwt):
-    self.username = conf.hydra['username']
-    self.password = conf.hydra['password']
     self.api_url = conf.hydra['url']
     self.conf = conf
     self.customer = customer
