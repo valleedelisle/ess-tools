@@ -97,10 +97,7 @@
               "secret": "${GITHUB_WEBHOOK_SECRET}"
             }
           }
-        ],
-        "postCommit": {
-           "script": "./hydra-notifierd.py"
-        }
+        ]
       }
     },
     {
@@ -115,7 +112,17 @@
       },
       "spec": {
         "strategy": {
-          "type": "Recreate"
+          "type": "Recreate",
+          "recreateParams": {
+            "post": {
+              "failurePolicy": "Abort",
+              "execNewPod": {
+                "command": [
+                 "resource/init_database.sh"
+                ]
+              }
+            }
+          }
         },
         "triggers": [
           {
@@ -186,6 +193,10 @@
                         "key" : "database-password"
                       }
                     }
+                  },
+                  {
+                    "name": "APP_FILE",
+                    "value": "${APP_FILE}"
                   },
                   {
                     "name": "APP_CONFIG",
@@ -343,20 +354,6 @@
                     "mountPath": "/var/lib/mysql"
                   }
                 ],
-                "readinessProbe": {
-                  "timeoutSeconds": 1,
-                  "initialDelaySeconds": 5,
-                  "exec": {
-                    "command": [ "/usr/libexec/check-container" ]
-                  }
-                },
-                "livenessProbe": {
-                  "timeoutSeconds": 10,
-                  "initialDelaySeconds": 120,
-                  "exec": {
-                    "command": [ "/usr/libexec/check-container", "--live" ]
-                  }
-                },
                 "resources": {
                   "limits": {
                     "memory": "${MEMORY_MARIADB_LIMIT}"
@@ -430,7 +427,7 @@
       "name": "SOURCE_REPOSITORY_REF",
       "displayName": "Git Reference",
       "description": "Set this to a branch name, tag or other ref of your repository if you are not using the default branch.",
-      "value": "openshift-db-config"
+      "value": "openshit-db-config"
     },
     {
       "name": "CONTEXT_DIR",
@@ -467,19 +464,25 @@
       "name": "DATABASE_NAME",
       "displayName": "Database Name",
       "required": true,
-      "value": "ess-notifier"
+      "value": "ess_notifier"
     },
     {
       "name": "DATABASE_USER",
       "displayName": "Database Username",
       "required": true,
-      "value": "ess-notifier"
+      "value": "ess_notifier"
     },
     {
       "name": "DATABASE_PASSWORD",
       "displayName": "Database User Password",
       "generate": "expression",
       "from": "[a-zA-Z0-9]{16}"
+    },
+    {
+      "name": "APP_FILE",
+      "displayName": "Application runnable script",
+      "description": "File executed by the container",
+      "value": "hydra-notifierd.py"
     },
     {
       "name": "APP_CONFIG",

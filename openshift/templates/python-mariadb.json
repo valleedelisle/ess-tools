@@ -440,13 +440,13 @@
       "name": "DATABASE_NAME",
       "displayName": "Database Name",
       "required": true,
-      "value": "default"
+      "value": "ess_notifier"
     },
     {
       "name": "DATABASE_USER",
       "displayName": "Database Username",
       "required": true,
-      "value": "ess-notifier"
+      "value": "ess_notifier"
     },
     {
       "name": "DATABASE_PASSWORD",
