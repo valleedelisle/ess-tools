@@ -3,13 +3,18 @@ Returns the configuration object
 """
 
 import configparser
+import os
+
+class CaseConfigParser(configparser.SafeConfigParser):
+     def optionxform(self, optionstr):
+         return optionstr
 
 class Config(object): # pylint: disable=useless-object-inheritance,too-few-public-methods
   """
   Returns the configuration object
   """
   def __init__(self, config_file=None):
-    config = configparser.ConfigParser()
+    config = CaseConfigParser(os.environ)
     config.read(config_file)
     self.__dict__.update(config)
     self.configparser = config
