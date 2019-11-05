@@ -19,9 +19,9 @@ class Event(DeclarativeBase): # pylint: disable=too-few-public-methods
   id = sa.Column(sa.String(32), primary_key=True) # pylint: disable=invalid-name
   case_id = sa.Column(sa.String(32), sa.ForeignKey('cases.id', ondelete='CASCADE'))
   event_time = sa.Column(sa.DateTime, default=datetime.utcnow)
-  variable = sa.Column(sa.String)
-  subject = sa.Column(sa.String)
-  text = sa.Column(sa.String)
+  variable = sa.Column(sa.String(48))
+  subject = sa.Column(sa.String(250))
+  text = sa.Column(sa.String(250))
   notify = sa.Column(sa.Boolean)
   case = sao.relationship("Case", back_populates="events")
 
