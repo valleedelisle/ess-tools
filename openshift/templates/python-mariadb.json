@@ -99,7 +99,7 @@
           }
         ],
         "postCommit": {
-           "script": "./manage.py test"
+           "script": "./hydra-notifierd.py"
         }
       }
     },
