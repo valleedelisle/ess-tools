@@ -130,6 +130,10 @@ objects:
           - name: ess-notifier-config
             mountPath: /opt/app-root/src/hydra-notifierd-secrets.conf
             subPath: hydra-notifierd-secrets.conf
+          - name: ess-notifier-config
+            mountPath: /opt/app-root/src/service-account.json
+            subPath: service-account.json
+ 
         volumes: 
         - name: ess-notifier-config
           secret:

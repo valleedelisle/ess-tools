@@ -5,9 +5,13 @@ Returns the configuration object
 import configparser
 import os
 
-class CaseConfigParser(configparser.SafeConfigParser):
-     def optionxform(self, optionstr):
-         return optionstr
+class CaseConfigParser(configparser.SafeConfigParser):# pylint: disable=too-many-ancestors
+  """
+  SafeConfigParser returns lower case attributes
+  This is a workaround to prevent this
+  """
+  def optionxform(self, optionstr):
+    return optionstr
 
 class Config(object): # pylint: disable=useless-object-inheritance,too-few-public-methods
   """

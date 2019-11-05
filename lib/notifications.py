@@ -28,7 +28,8 @@ class Notification():
     """
     Send sms with case data
     """
-    if (self.conf.notif_twilio.getboolean('enabled') is True and
+    if ("notif_twilio" in self.conf.configparser.sections() and
+        self.conf.notif_twilio.getboolean('enabled') is True and
         'sms_list' in self.customer_conf):
       msg = ("Case {case_object.caseNumber} - {case_object.severity} - "
              "{case_object.account[name]} ({case_object.accountNumber}) - {case_object.sbrGroup}"
@@ -43,7 +44,8 @@ class Notification():
     """
     Send gchat notification with the case data
     """
-    if (self.conf.notif_gchat.getboolean('enabled') and
+    if ("notif_gchat" in self.conf.configparser.sections() and
+        self.conf.notif_gchat.getboolean('enabled') and
         'gchat_room' in self.customer_conf):
       credentials = ServiceAccountCredentials.from_json_keyfile_name(
         self.conf.notif_gchat['credentials'], self.conf.notif_gchat['scopes'])
@@ -62,7 +64,8 @@ class Notification():
     Send notification by email using a SMTP server
     """
 
-    if (self.conf.notif_email.getboolean('enabled') and
+    if ("notif_email" in self.conf.configparser.sections() and
+        self.conf.notif_email.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
       LOG.info("Sending email to %s", self.customer_conf['mailing_list'])
       Email(self.conf, self.customer_conf['mailing_list'], self.event.subject,
@@ -72,7 +75,8 @@ class Notification():
     """
     Send notification using the mailgun API
     """
-    if (self.conf.notif_mailgun.getboolean('enabled') and
+    if ("notif_mailgun" in self.conf.configparser.sections() and
+        self.conf.notif_mailgun.getboolean('enabled') and
         'mailing_list' in self.customer_conf):
       LOG.info("EMAIL to %s", self.customer_conf['mailing_list'])
       LOG.debug("HTML Content: %s", self.case.html())
