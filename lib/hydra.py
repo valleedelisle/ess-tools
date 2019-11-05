@@ -3,36 +3,26 @@ Class that maps to the hydra api
 """
 
 from urllib.parse import urlencode
-import json
-import re
 import logging
 from datetime import datetime
-from time import sleep
-import urllib3
 from db.models.cases import Case # pylint: disable=relative-beyond-top-level
+from lib.req import Req
 
 
 LOG = logging.getLogger("root.hydra")
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Hydra():
   """
   We need to pass the global config and the customer section's name
   """
-  def __init__(self, conf, customer):
+  def __init__(self, conf, customer, jwt):
     self.username = conf.hydra['username']
     self.password = conf.hydra['password']
     self.api_url = conf.hydra['url']
     self.conf = conf
     self.customer = customer
+    self.token = jwt.get_token()
     LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
-
-  def auth_string(self):
-    """
-    Returns a mix of the username and password
-    """
-    return urllib3.util.make_headers(basic_auth=self.username+":"+self.password)
 
   def get_conf(self):
     """
@@ -75,8 +65,6 @@ class Hydra():
 
     return case_list
 
-
-
   def build_query(self):
     """
     Function to build the query string sent to hydra
@@ -92,59 +80,13 @@ class Hydra():
     query['limit'] = customer_conf.getint('limit')
     return query
 
-
-  def request(self, verb, url, data=None):
-    """
-    Establishes the request and returns the data
-    """
-    if LOG.level < 20:
-      urllib3.add_stderr_logger()
-    retries = urllib3.Retry(connect=self.conf.http_request.getint('retry_connect'),
-                            status=self.conf.http_request.getint('retry_status'),
-                            read=self.conf.http_request.getint('retry_read'),
-                            total=self.conf.http_request.getint('retry_total'),
-                            backoff_factor=self.conf.http_request.getint('backoff_factor'),
-                            status_forcelist=self.conf.http_request['status_forcelist'].split(','))
-    timeout = urllib3.Timeout(connect=self.conf.http_request.getint('timeout_connect'),
-                              read=self.conf.http_request.getint('timeout_read'))
-    response = 0
-    while response != 200:
-      http = urllib3.PoolManager(timeout=timeout, retries=retries,
-                                 cert_reqs='CERT_NONE')
-      headers = self.auth_string()
-      json_data = None
-      if re.match('PUT|POST', verb):
-        if data is None:
-          raise Exception("InvalidData", "When PUT/POST, we need data")
-        json_data = str(json.dumps(data)).encode('utf-8')
-
-      LOG.debug("Header: %s", headers)
-      LOG.info("Verb: %s URL: %s Data: %s", verb, url, json_data)
-      req = http.request(verb, url, body=json_data, headers=headers)
-      response = req.status
-      LOG.info("Response Code : %s", req.status)
-      resp_data = str(req.data).replace("\\n", "\n").replace("\\t", "\t")
-      LOG.debug("Reponse Data %s", resp_data)
-      if req.status == 401 or req.status == 403:
-        LOG.error("AuthenticationError: Return Code %s\n%s", req.status, req.data)
-      if req.status == 404:
-        LOG.error("ObjectNotFound: Return Code %s\n%s", req.status, req.data)
-      if req.status >= 500:
-        LOG.error("ServerError: Return Code %s\n%s", req.status, req.data)
-      if req.status >= 400:
-        LOG.error("UnknownError: Return Code %s\n%s", req.status, req.data)
-      if req.status != 200:
-        LOG.error("Response not 200 (%s), sleeping for 10 seconds", req.status)
-        sleep(10)
-    return req.data.decode('utf-8')
-
   def get(self, endpoint, query):
     """
     Wrapper for the API call
     """
     url = self.api_url + "/" + endpoint + "?" + urlencode(query)
     LOG.debug("Getting Hydra on %s", url)
-    return self.request('GET', url)
+    return Req(verb='GET', url=url, conf=self.conf, token=self.token).resp_data
 
   def put(self, endpoint, data):
     """
@@ -153,13 +95,13 @@ class Hydra():
     """
     url = self.api_url + "/" + endpoint
     LOG.debug("Putting Hydra on %s Data: %s", url, data)
-    return self.request('PUT', url, data)
+    return Req(verb='PUT', url=url, data=data, token=self.token).resp_data
 
   def get_cases(self, query):
     """
-    Wrapper that gets all the cases and returns a json
+    Wrapper that gets all the cases and returns a dict
     """
-    return json.loads(self.get("cases", query))
+    return self.get("cases", query)
 
   def set_tags(self, case_id, tags):
     """

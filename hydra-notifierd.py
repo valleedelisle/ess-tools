@@ -15,6 +15,7 @@ from pid import PidFile
 from lib.log import Log
 from lib.hydra import Hydra
 from lib.config import Config
+from lib.jwt import Jwt
 import db.models as db_package
 from db.models.cases import Case
 
@@ -40,12 +41,12 @@ def parse_args():
                                'hydra-notifierd-secrets.conf'])
   return parser.parse_args()
 
-def hydra_poll(customer):
+def hydra_poll(customer, jwt):
   """
   function that polls the hydra api and stores
   the data in the DB
   """
-  hydra = Hydra(CONF, customer)
+  hydra = Hydra(CONF, customer, jwt)
   cases = hydra.poll()
   for case in cases:
     old_case = db_package.session.query(Case).filter_by(id=case.id)
@@ -69,6 +70,8 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
   try:
     with PidFile('hydra-notifierd', args.working_dir):
       LOG.info("Aguments: %s" % (args))
+      # Building the JWT object
+      jwt = Jwt(CONF)
       while True:
         CONF.notifierd['debug'] = str(args.debug)
         LOG.debug("Conf %s" % (CONF))
@@ -76,9 +79,9 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
           section = getattr(CONF, sec)
           if 'customer_' in sec and section.getboolean('enabled'):
             LOG.info("Checking %s Config: %s" % (sec, section))
-            for key in section:
-              LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
-            hydra_poll(sec)
+#            for key in section:
+#              LOG.debug("Customerconf: Key %s Value: %s" % (key, section[key]))
+            hydra_poll(sec, jwt)
             time.sleep(CONF.notifierd.getint('sleep'))
 
   except Exception as error: # pylint: disable=broad-except

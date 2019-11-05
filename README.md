@@ -76,6 +76,13 @@ $ ./.venv/bin/python3.6 -m pip install -r requirements.txt
 
 - You can add the secrets and password in `hydra-notifierd-secrets.conf`
 
+- Generate a JWT token to save in an environment variable
+```
+$ export RHN_USER=rhn-support-dvalleed
+$ export RHN_PASS=something
+$ export JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
+```
+
 - Initialize the database
 ```
 $ alembic revision --autogenerate -m "init"
@@ -89,16 +96,9 @@ $ source .venv/bin/activate
 $ ./hydra-notifierd.py
 ```
 
-- Add a key to `authorized_keys` for automated deploy
-```
-command="/git/ess-tools/resources/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEknEO6tjWf7rX7ASouoPt8cQFkwSBb1kU65ZCX2qzAvgBksrBgE7HtByO827oEBgXUbJ1BET2N5rTfosQ1Hhkk=
-```
-
-- The `resources/deploy.sh` will add a systemd unit for the notifierd and install all python modules necessary. This is the script called by the Gitlab's CI
-
 ## TODO
 - Complete automatic reporting of events twice per day
-- Build and deploy in OpenShift
+- Autorebuild on commit
 
 ## Author
 David Vallee Delisle <dvd@redhat.com>
