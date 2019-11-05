@@ -35,8 +35,8 @@ class Req(): # pylint: disable=too-many-instance-attributes
     self.conf = kwargs['conf']
     if LOG.level < 20:
       urllib3.add_stderr_logger()
-    else:
       http.client.HTTPConnection.debuglevel = 5
+
     self.retries = urllib3.Retry(connect=self.conf.http_request.getint('retry_connect'),
                                  status=self.conf.http_request.getint('retry_status'),
                                  read=self.conf.http_request.getint('retry_read'),
