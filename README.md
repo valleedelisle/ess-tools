@@ -51,49 +51,25 @@ Make sure you filled the `airtable` and `bugzilla` configuration and that you ha
 ## Installation
 
 - Clone this repository
-
 ```
 $ git clone git@github.com:valleedelisle/ess-tools.git
 ```
-
 - To send email notification, you need to have a [Mailgun](https://www.mailgun.com/) account or you need to have access to an SMTP server.
-
 - To send SMS notification, you need to have a [Twilio](https://www.twilio.com) account.
-
-- Build a venv
-
+- You can add the secrets, customer list, passwords and api_key in `hydra-notifierd-secrets.conf`
+- Add the secret files to the openshift secrets
 ```
-$ python3.6 -m venv .venv
+oc create secret generic ess-notifier-config --from-file hydra-notifierd-secrets.conf --from-file service-account.json
 ```
-
-- Install requirements
-
-```
-$ ./.venv/bin/python3.6 -m pip install -r requirements.txt 
-```
-
-- Edit `hydra-notifierd.conf`
-
-- You can add the secrets and password in `hydra-notifierd-secrets.conf`
-
 - Generate a JWT token to save in an environment variable
 ```
 $ export RHN_USER=rhn-support-dvalleed
 $ export RHN_PASS=something
 $ export JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
 ```
-
-- Initialize the database
+- Deploy the app
 ```
-$ alembic revision --autogenerate -m "init"
-$ alembic upgrade head
-```
-
-- Execute the `hydra-notifierd.py` script after loading the venv
-
-```
-$ source .venv/bin/activate
-$ ./hydra-notifierd.py
+$ oc new-app openshift/templates/python-mariadb-persistent.yaml --name notifier -e JWT_REFRESH_TOKEN=$JWT_REFRESH_TOKEN
 ```
 
 ## TODO
