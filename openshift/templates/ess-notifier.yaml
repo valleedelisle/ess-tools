@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Template
 labels:
-  app: ess-notifier
-  template: ess-notifier
+  app: ${NAME}
+  template: ${NAME}
 message: 'The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
   For more information about using this template, including OpenShift considerations,
   see https://github.com/valleedelisle/ess-tools'
@@ -17,7 +17,7 @@ metadata:
     openshift.io/support-url: https://access.redhat.com
     tags: quickstart,python
     template.openshift.io/bindable: 'false'
-  name: ess-notifier
+  name: ${NAME}
 objects:
 - apiVersion: v1
   kind: Secret
@@ -122,23 +122,23 @@ objects:
                 key: secret-key
                 name: ${NAME}
           image: ' '
-          name: ess-notifier
+          name: ${NAME}
           resources:
             limits:
               memory: ${MEMORY_LIMIT}
           volumeMounts:
-          - name: ess-notifier-config
+          - name: ${NAME}-config
             mountPath: /opt/app-root/src/hydra-notifierd-secrets.conf
             subPath: hydra-notifierd-secrets.conf
-          - name: ess-notifier-config
+          - name: ${NAME}-config
             mountPath: /opt/app-root/src/service-account.json
             subPath: service-account.json
           - mountPath: /opt/app-root/src/alembic/versions
             name: alembic-versions
         volumes: 
-        - name: ess-notifier-config
+        - name: ${NAME}-config
           secret:
-            secretName: ess-notifier-config
+            secretName: ${NAME}-config
         - name: alembic-versions
           persistentVolumeClaim:
             claimName: alembic-versions
@@ -147,7 +147,7 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - ess-notifier
+        - ${NAME}
         from:
           kind: ImageStreamTag
           name: ${NAME}:latest
