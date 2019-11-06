@@ -30,9 +30,8 @@ class Req(): # pylint: disable=too-many-instance-attributes
       self.data = kwargs['data']
     if 'token' in kwargs:
       self.token = kwargs['token']
-    LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
-
     self.conf = kwargs['conf']
+    LOG.level = 10 if self.conf.notifierd.getboolean('debug') else 20
     if LOG.level < 20:
       urllib3.add_stderr_logger()
       http.client.HTTPConnection.debuglevel = 5
