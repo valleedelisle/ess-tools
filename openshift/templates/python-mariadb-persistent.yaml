@@ -82,7 +82,7 @@ objects:
       name: ${NAME}
     strategy:
       rollingParams:
-        post:
+        pre:
           execNewPod:
             command:
             - ./resources/init_database.sh
