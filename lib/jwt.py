@@ -55,7 +55,7 @@ class Jwt():
     self.token = req.resp_data['access_token']
     self.refresh_token = req.resp_data['refresh_token']
     environ['JWT_REFRESH_TOKEN'] = self.refresh_token
-    environ['JWT_REFRESH_TIME'] = now
+    environ['JWT_REFRESH_TIME'] = str(now)
     self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])
 
   def get_token(self):
