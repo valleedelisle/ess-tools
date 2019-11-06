@@ -1,9 +1,9 @@
 # Introduction
 
-- This container integrates python with the openshift-cli package.
-- I was unable to find a docker image with openshift-cli and python3 so I made one.
+- This container integrates python with the `openshift-cli` package.
+- I was unable to find a docker image with `openshift-cli` and `python3` so I made one.
 - It's used for CI/CD in `.gitlab-ci.yml`
-- It has to be built on a RHEL7 subscribed system because the base `openshift-cli` image is built on RHEL7
+- It has to be built on a RHEL7 subscribed system because the base `openshift-cli` image is `rhel7`
 
 # Build instruction
 ```
