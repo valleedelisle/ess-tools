@@ -30,7 +30,7 @@ class Req(): # pylint: disable=too-many-instance-attributes
       self.data = kwargs['data']
     if 'token' in kwargs:
       self.token = kwargs['token']
-
+    LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
 
     self.conf = kwargs['conf']
     if LOG.level < 20:
