@@ -133,11 +133,15 @@ objects:
           - name: ess-notifier-config
             mountPath: /opt/app-root/src/service-account.json
             subPath: service-account.json
- 
+          - mountPath: /opt/app-root/src/alembic/versions
+            name: alembic-versions
         volumes: 
         - name: ess-notifier-config
           secret:
             secretName: ess-notifier-config
+        - name: alembic-versions
+          persistentVolumeClaim:
+            claimName: alembic-versions
 
     triggers:
     - imageChangeParams:
@@ -149,6 +153,16 @@ objects:
           name: ${NAME}:latest
       type: ImageChange
     - type: ConfigChange
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: alembic-versions
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 512Mi
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -265,7 +279,7 @@ parameters:
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
   required: true
-  value: 1Gi
+  value: 5Gi
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
