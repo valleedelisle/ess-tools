@@ -17,20 +17,20 @@ variables:
   # OPENSHIFT_TOKEN: my.openshift.token
 test1:
   stage: test
-  before_script: []
-  script:
+  before_script:
     - python3.6 -m pip install -r requirements.txt
     - python3.6 -m pip install pylint --quiet
     - python3.6 -m pip install pylint-sqlalchemy --quiet
-    - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
+  script:
+   - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
   tags:
     - docker
 
 test2:
   stage: test
-  before_script: []
-  script:
+  before_script:
     - python3.6 -m pip install bandit --quiet
+  script:
     - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
   tags:
     - docker
@@ -43,6 +43,7 @@ test2:
   script:
     - echo "$APP"
     - oc get services $APP 2> /dev/null || oc new-app . --name=$APP --strategy=docker
+      #oc new-app openshift/templates/python-mariadb-persistent.yaml --name notifier -e JWT_REFRESH_TOKEN=$JWT_REFRESH_TOKEN
     - oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker
