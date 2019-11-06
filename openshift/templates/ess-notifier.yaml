@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Template
 labels:
-  app: ${NAME}
-  template: ${NAME}
+  app: ess-notifier
+  template: ess-notifier
 message: 'The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
   For more information about using this template, including OpenShift considerations,
   see https://github.com/valleedelisle/ess-tools'
@@ -85,7 +85,7 @@ objects:
             command:
             - ./resources/init_database.sh 
             volumes:
-              - alembic-versions
+              - "${NAME}-alembic-versions"
           failurePolicy: Abort
       type: Rolling
     template:
@@ -134,14 +134,14 @@ objects:
             mountPath: /opt/app-root/src/service-account.json
             subPath: service-account.json
           - mountPath: /opt/app-root/src/alembic/versions
-            name: alembic-versions
+            name: ${NAME}-alembic-versions
         volumes: 
-        - name: ${NAME}-config
+        - name: "${NAME}-config"
           secret:
             secretName: ${NAME}-config
-        - name: alembic-versions
+        - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
-            claimName: alembic-versions
+            claimName: "${NAME}-alembic-versions"
 
     triggers:
     - imageChangeParams:
@@ -156,7 +156,7 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: alembic-versions
+    name: "${NAME}-alembic-versions"
   spec:
     accessModes:
     - ReadWriteOnce
@@ -166,7 +166,7 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: ${DATABASE_SERVICE_NAME}
+    name: "${NAME}-${DATABASE_SERVICE_NAME}"
   spec:
     accessModes:
     - ReadWriteOnce
@@ -178,32 +178,32 @@ objects:
   metadata:
     annotations:
       description: Exposes the database server
-    name: ${DATABASE_SERVICE_NAME}
+    name: "${NAME}-${DATABASE_SERVICE_NAME}"
   spec:
     ports:
-    - name: mariadb
+    - name: "${NAME}-mariadb"
       port: 3306
       targetPort: 3306
     selector:
-      name: ${DATABASE_SERVICE_NAME}
+      name: "${NAME}-${DATABASE_SERVICE_NAME}"
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     annotations:
       description: Defines how to deploy the database
       template.alpha.openshift.io/wait-for-ready: 'true'
-    name: ${DATABASE_SERVICE_NAME}
+    name: "${NAME}-${DATABASE_SERVICE_NAME}"
   spec:
     replicas: 1
     selector:
-      name: ${DATABASE_SERVICE_NAME}
+      name: "${NAME}-${DATABASE_SERVICE_NAME}"
     strategy:
       type: Recreate
     template:
       metadata:
         labels:
-          name: ${DATABASE_SERVICE_NAME}
-        name: ${DATABASE_SERVICE_NAME}
+          name: "${NAME}-${DATABASE_SERVICE_NAME}"
+        name: "${NAME}-${DATABASE_SERVICE_NAME}"
       spec:
         containers:
         - env:
@@ -220,7 +220,7 @@ objects:
           - name: MYSQL_DATABASE
             value: ${DATABASE_NAME}
           image: ' '
-          name: mariadb
+          name: ${NAME}-mariadb
           ports:
           - containerPort: 3306
           resources:
@@ -228,16 +228,16 @@ objects:
               memory: ${MEMORY_MARIADB_LIMIT}
           volumeMounts:
           - mountPath: /var/lib/mysql
-            name: ${DATABASE_SERVICE_NAME}-data
+            name: "${DATABASE_SERVICE_NAME}-data"
         volumes:
-        - name: ${DATABASE_SERVICE_NAME}-data
+        - name: "${DATABASE_SERVICE_NAME}-data"
           persistentVolumeClaim:
-            claimName: ${DATABASE_SERVICE_NAME}
+            claimName: "${NAME}-${DATABASE_SERVICE_NAME}"
     triggers:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - mariadb
+        - "${NAME}-mariadb"
         from:
           kind: ImageStreamTag
           name: mariadb:${MARIADB_VERSION}
@@ -308,7 +308,7 @@ parameters:
 - displayName: Database Service Name
   name: DATABASE_SERVICE_NAME
   required: true
-  value: mariadb
+  value: "mariadb"
 - description: 'Database engine: postgresql, mysql or sqlite (default).'
   displayName: Database Engine
   name: DATABASE_ENGINE
