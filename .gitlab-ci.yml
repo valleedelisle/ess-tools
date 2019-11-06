@@ -22,6 +22,8 @@ test1:
     - pip install pylint --quiet
     - pip install pylint-sqlalchemy --quiet
     - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
+  tags:
+    - docker
 
 test2:
   stage: test
@@ -29,6 +31,8 @@ test2:
   script:
     - pip install bandit --quiet
     - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
+  tags:
+    - docker
 
 
 .deploy: &deploy
@@ -39,6 +43,8 @@ test2:
     - "oc get services $APP 2> /dev/null || oc new-app . --name=$APP --strategy=docker"
     - "oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow"
     - "oc get routes $APP 2> /dev/null || oc expose service $APP --hostname=$APP_HOST"
+  tags:
+    - docker
 
 review:
   <<: *deploy
@@ -54,6 +60,8 @@ review:
     - branches
   except:
     - master
+  tags:
+    - docker
 
 stop-review:
   <<: *deploy
@@ -71,6 +79,8 @@ stop-review:
     - branches
   except:
     - master
+  tags:
+    - docker
 
 staging:
   <<: *deploy
@@ -83,6 +93,8 @@ staging:
     url: http://$CI_PROJECT_NAME-staging.$OPENSHIFT_DOMAIN
   only:
     - master
+  tags:
+    - docker
 
 production:
   <<: *deploy
@@ -96,4 +108,6 @@ production:
     url: http://$CI_PROJECT_NAME.$OPENSHIFT_DOMAIN
   only:
     - master
+  tags:
+    - docker
 
