@@ -33,13 +33,19 @@ class Jwt():
     self.url = conf.DEFAULT['openid_url']
     self.expiration_time = None
     self.token = None
-    try:
-      self.refresh_token = environ['JWT_REFRESH_TOKEN']
-    except NameError:
-      LOG.error("Missing refresh_token: %s", environ)
-      sys.exit(1)
     self.conf = conf
+    self.token_file = self.conf.DEFAULT['jwt_refresh_token_path']
     LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
+    try:
+      with open(self.token_file, "r") as token_file:
+        self.refresh_token = token_file.read()
+    except: # pylint: disable=bare-except
+      LOG.warning("No token in file %s", self.token_file)
+      try:
+        self.refresh_token = environ['JWT_REFRESH_TOKEN']
+      except NameError:
+        LOG.error("Missing refresh_token in environment: %s", environ)
+        sys.exit(1)
 
   def refresh(self):
     """
@@ -54,9 +60,10 @@ class Jwt():
     LOG.debug("Response from refresh: %s", req.resp_data)
     self.token = req.resp_data['access_token']
     self.refresh_token = req.resp_data['refresh_token']
-    environ['JWT_REFRESH_TOKEN'] = self.refresh_token
-    environ['JWT_REFRESH_TIME'] = str(now)
     self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])
+    # We need to keep a persistent copy of the refresh_token for rebuilds
+    with open(self.token_file, "w") as token_file:
+      token_file.write(self.refresh_token)
 
   def get_token(self):
     """
