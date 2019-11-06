@@ -96,6 +96,8 @@ objects:
       spec:
         containers:
         - env:
+          - name: INSTANCE_NAME
+            value: ${NAME}
           - name: DATABASE_SERVICE_NAME
             value: ${DATABASE_SERVICE_NAME}
           - name: DATABASE_ENGINE
