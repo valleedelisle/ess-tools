@@ -17,7 +17,7 @@ metadata:
     openshift.io/support-url: https://access.redhat.com
     tags: quickstart,python
     template.openshift.io/bindable: 'false'
-  name: ${NAME}
+  name: ess-notifier
 objects:
 - apiVersion: v1
   kind: Secret
@@ -54,6 +54,8 @@ objects:
     strategy:
       sourceStrategy:
         env:
+        - name: INSTANCE_NAME
+          value: ${NAME}
         - name: PIP_INDEX_URL
           value: ${PIP_INDEX_URL}
         from:
@@ -209,6 +211,8 @@ objects:
       spec:
         containers:
         - env:
+          - name: INSTANCE_NAME
+            value: ${NAME}
           - name: MYSQL_USER
             valueFrom:
               secretKeyRef:
