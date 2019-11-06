@@ -81,13 +81,15 @@ objects:
     selector:
       name: ${NAME}
     strategy:
-      recreateParams:
+      rollingParams:
         post:
           execNewPod:
             command:
             - ./resources/init_database.sh
+            volumes:
+              - alembic-versions
           failurePolicy: Abort
-      type: Recreate
+      type: Rolling
     template:
       metadata:
         labels:
