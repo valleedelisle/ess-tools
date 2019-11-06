@@ -11,6 +11,8 @@ import time
 import argparse
 import traceback
 import unicodedata  # pylint: disable=unused-import
+import re
+from os import environ
 from pid import PidFile
 from lib.log import Log
 from lib.hydra import Hydra
@@ -89,6 +91,12 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
     LOG.error("%s" % traceback.format_exc())
 
 if __name__ == '__main__':
+  # Since we use dynamic service names, and configparser doesn't support nested interpolation
+  # we need to rewrite environment to set MARIADB_SERVICE_HOST and MARIADB_SERVICE_PORT
+  for key in environ:
+    match = re.match('.*(MARIADB_SERVICE_(HOST|PORT))', key)
+    if match:
+      environ[match.group(1)] = environ[key]
   args = parse_args()
   LOG = Log(debug=args.debug, log_file=args.log_file)
   CONF = Config(config_file=args.config_file)
