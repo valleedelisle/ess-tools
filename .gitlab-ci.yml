@@ -19,6 +19,7 @@ test1:
   stage: test
   before_script: []
   script:
+    - python3.6 -m pip install -r requirements.txt
     - python3.6 -m pip install pylint --quiet
     - python3.6 -m pip install pylint-sqlalchemy --quiet
     - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
