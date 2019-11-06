@@ -1,5 +1,5 @@
 # This file is a template, and might need editing before it works on your project.
-image: openshift/origin-cli
+image: valleedelisle/openshift-cli-python
 
 stages:
   - build  # dummy stage to follow the template guidelines
@@ -19,8 +19,8 @@ test1:
   stage: test
   before_script: []
   script:
-    - pip install pylint --quiet
-    - pip install pylint-sqlalchemy --quiet
+    - python3.6 -m pip install pylint --quiet
+    - python3.6 -m pip install pylint-sqlalchemy --quiet
     - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
   tags:
     - docker
@@ -29,7 +29,7 @@ test2:
   stage: test
   before_script: []
   script:
-    - pip install bandit --quiet
+    - python3.6 -m pip install bandit --quiet
     - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
   tags:
     - docker
@@ -110,4 +110,3 @@ production:
     - master
   tags:
     - docker
-
