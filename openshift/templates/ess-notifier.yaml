@@ -1,25 +1,23 @@
 apiVersion: v1
 kind: Template
 labels:
-  app: ess-notifier-mariadb-persistent
-  template: ess-notifier-mariadb-persistent
+  app: ess-notifier
+  template: ess-notifier
 message: 'The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
-
-
   For more information about using this template, including OpenShift considerations,
   see https://github.com/valleedelisle/ess-tools'
 metadata:
   annotations:
     description: https://github.com/valleedelisle/ess-tools
     iconClass: icon-python
-    openshift.io/display-name: ESS-Notifier + MariaDB
+    openshift.io/display-name: Enhanced Solution Support Notification Tool
     openshift.io/documentation-url: https://github.com/valleedelisle/ess-tools
     openshift.io/long-description: ''
     openshift.io/provider-display-name: Red Hat, Inc.
     openshift.io/support-url: https://access.redhat.com
     tags: quickstart,python
     template.openshift.io/bindable: 'false'
-  name: ess-notifier-mariadb-persistent
+  name: ess-notifier
 objects:
 - apiVersion: v1
   kind: Secret
@@ -85,7 +83,7 @@ objects:
         pre:
           execNewPod:
             command:
-            - ./resources/init_database.sh
+            - [ "./resources/init_database.sh", ${OPENSHIFT_BUILD_COMMIT} ]
             volumes:
               - alembic-versions
           failurePolicy: Abort
@@ -124,7 +122,7 @@ objects:
                 key: secret-key
                 name: ${NAME}
           image: ' '
-          name: ess-notifier-mariadb-persistent
+          name: ess-notifier
           resources:
             limits:
               memory: ${MEMORY_LIMIT}
@@ -149,7 +147,7 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - ess-notifier-mariadb-persistent
+        - ess-notifier
         from:
           kind: ImageStreamTag
           name: ${NAME}:latest
@@ -251,7 +249,7 @@ parameters:
   displayName: Name
   name: NAME
   required: true
-  value: ess-notifier-mariadb-persistent
+  value: ess-notifier
 - description: The OpenShift Namespace where the ImageStream resides.
   displayName: Namespace
   name: NAMESPACE
