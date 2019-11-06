@@ -83,7 +83,8 @@ objects:
         pre:
           execNewPod:
             command:
-            - [ "./resources/init_database.sh", ${OPENSHIFT_BUILD_COMMIT} ]
+            - ./resources/init_database.sh 
+            - ${OPENSHIFT_DEPLOYMENT_NAME}
             volumes:
               - alembic-versions
           failurePolicy: Abort
