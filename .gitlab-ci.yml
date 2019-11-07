@@ -70,6 +70,7 @@ stop-review:
   script:
     - oc delete all -l "set=$APP"
     - oc delete secrets -l "set=$APP"
+    - oc delete persistentvolumeclaims -l "set=$APP"
   when: manual
   variables:
     APP: review-$CI_COMMIT_REF_NAME
