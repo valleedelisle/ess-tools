@@ -102,6 +102,10 @@ staging:
 production:
   <<: *deploy
   stage: production
+  script:                                                                                                                                                                                                                                                                                                                                                                                                                                   
+  - oc delete all -l "set=staging-ess-notifier"
+  - oc delete secrets -l "set=staging-ess-notifier"
+  - oc delete persistentvolumeclaims -l "set=staging-ess-notifier"
   variables:
     APP: ess-notifier
     APP_HOST: $CI_PROJECT_NAME.$OPENSHIFT_DOMAIN
