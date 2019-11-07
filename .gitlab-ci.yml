@@ -42,7 +42,7 @@ test2:
     - oc project "$CI_PROJECT_NAME" 2> /dev/null || oc new-project "$CI_PROJECT_NAME"
   script:
     - echo "$APP"
-    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP"
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
       #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker
@@ -100,12 +100,14 @@ staging:
     - docker
 
 production:
-  <<: *deploy
   stage: production
-  script:                                                                                                                                                                                                                                                                                                                                                                                                                                   
+  script:
+  - oc login "$OPENSHIFT_SERVER" --token="$OPENSHIFT_TOKEN" --insecure-skip-tls-verify
+  - oc project "$CI_PROJECT_NAME" 2> /dev/null || oc new-project "$CI_PROJECT_NAME"
   - oc delete all -l "set=staging-ess-notifier"
   - oc delete secrets -l "set=staging-ess-notifier"
   - oc delete persistentvolumeclaims -l "set=staging-ess-notifier"
+  - oc start-build ess-notifier --follow
   variables:
     APP: ess-notifier
     APP_HOST: $CI_PROJECT_NAME.$OPENSHIFT_DOMAIN
