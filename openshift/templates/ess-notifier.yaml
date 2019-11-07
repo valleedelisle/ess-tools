@@ -142,7 +142,7 @@ objects:
         volumes: 
         - name: "${NAME}-config"
           secret:
-            secretName: ${NAME}-config
+            secretName: ess-notifier-config
         - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
             claimName: "${NAME}-alembic-versions"
