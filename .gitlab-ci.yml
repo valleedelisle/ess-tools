@@ -1,38 +1,115 @@
-production:
-  image: python:3.6
-  only:
-    - master
+# This file is a template, and might need editing before it works on your project.
+image: valleedelisle/openshift-cli-python
+
+stages:
+  - build  # dummy stage to follow the template guidelines
+  - test
+  - deploy  # dummy stage to follow the template guidelines
+  - review
+  - staging
+  - production
+  - cleanup
+
+variables:
+  OPENSHIFT_SERVER: https://paas.psi.redhat.com:443
+  OPENSHIFT_DOMAIN: paas.psi.redhat.com
+  # Configure this variable in Secure Variables:
+  # OPENSHIFT_TOKEN: my.openshift.token
+test1:
+  stage: test
   before_script:
-    - python --version
-    - pip install -r requirements.txt --quiet
-    - 'which ssh-agent || ( yum install openssh-client -y )'
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan $PROD_SERVER >> ~/.ssh/known_hosts   
-    - chmod 644 ~/.ssh/known_hosts
+    - python3.6 -m pip install -r requirements.txt
+    - python3.6 -m pip install pylint --quiet
+    - python3.6 -m pip install pylint-sqlalchemy --quiet
   script:
-    - pip install pylint --quiet
-    - pip install pylint-sqlalchemy --quiet
-    - pip install bandit --quiet
-    - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
-    - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
-    - ssh centos@$PROD_SERVER deploy.sh
+   - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
   tags:
     - docker
-dev:
-  image: python:3.6
+
+test2:
+  stage: test
+  before_script:
+    - python3.6 -m pip install bandit --quiet
+  script:
+    - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
+  tags:
+    - docker
+
+
+.deploy: &deploy
+  before_script:
+    - oc login "$OPENSHIFT_SERVER" --token="$OPENSHIFT_TOKEN" --insecure-skip-tls-verify
+    - oc project "$CI_PROJECT_NAME" 2> /dev/null || oc new-project "$CI_PROJECT_NAME"
+  script:
+    - echo "$APP"
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP"
+      #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
+  tags:
+    - docker
+
+review:
+  <<: *deploy
+  stage: review
+  variables:
+    APP: review-$CI_COMMIT_REF_NAME
+    APP_HOST: $CI_PROJECT_NAME-$CI_ENVIRONMENT_SLUG.$OPENSHIFT_DOMAIN
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    url: http://$CI_PROJECT_NAME-$CI_ENVIRONMENT_SLUG.$OPENSHIFT_DOMAIN
+    on_stop: stop-review
+  only:
+    - branches
   except:
     - master
-  before_script:
-    - python --version
-    - pip install -r requirements.txt --quiet
+  tags:
+    - docker
+
+stop-review:
+  <<: *deploy
+  stage: cleanup
   script:
-    - pip install pylint --quiet
-    - pip install pylint-sqlalchemy --quiet
-    - pip install bandit --quiet
-    - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
-    - bandit -r bug-report.py hydra-notifierd.py lib/*.py -lll
+    - oc delete all -l "set=$APP"
+    - oc delete secrets -l "set=$APP"
+    - oc delete persistentvolumeclaims -l "set=$APP"
+  when: manual
+  variables:
+    APP: review-$CI_COMMIT_REF_NAME
+    GIT_STRATEGY: none
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    action: stop
+  only:
+    - branches
+  except:
+    - master
+  tags:
+    - docker
+
+staging:
+  <<: *deploy
+  stage: staging
+  variables:
+    APP: staging-ess-notifier
+    APP_HOST: $CI_PROJECT_NAME-staging.$OPENSHIFT_DOMAIN
+  environment:
+    name: staging
+    url: http://$CI_PROJECT_NAME-staging.$OPENSHIFT_DOMAIN
+  only:
+    - master
+  tags:
+    - docker
+
+production:
+  <<: *deploy
+  stage: production
+  variables:
+    APP: ess-notifier
+    APP_HOST: $CI_PROJECT_NAME.$OPENSHIFT_DOMAIN
+  when: manual
+  environment:
+    name: production
+    url: http://$CI_PROJECT_NAME.$OPENSHIFT_DOMAIN
+  only:
+    - master
   tags:
     - docker
