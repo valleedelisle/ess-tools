@@ -18,7 +18,7 @@ class Bug(DeclarativeBase): # pylint: disable=too-few-public-methods
   Bug DB Object
   """
   __tablename__ = 'bugs'
-  id = sa.Column(sa.String(32), primary_key=True)
+  id = sa.Column(sa.Integer, primary_key=True)
   status = sa.Column(sa.String(12))
   summary = sa.Column(sa.String(200))
   assigned_to = sa.Column(sa.String(100))
