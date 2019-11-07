@@ -42,7 +42,7 @@ test2:
     - oc project "$CI_PROJECT_NAME" 2> /dev/null || oc new-project "$CI_PROJECT_NAME"
   script:
     - echo "$APP"
-    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN=${JWT_REFRESH_TOKEN} -l set=$APP
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP"
       #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker
@@ -68,7 +68,7 @@ stop-review:
   <<: *deploy
   stage: cleanup
   script:
-    - oc delete all -l "app=$APP"
+    - oc delete all -l "set=$APP"
   when: manual
   variables:
     APP: review-$CI_COMMIT_REF_NAME
