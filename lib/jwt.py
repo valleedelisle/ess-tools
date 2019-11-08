@@ -39,9 +39,12 @@ class Jwt():
     LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
 
   def get_refresh_token(self):
+<<<<<<< HEAD
     """
     Function that tries to determine a refresh_token
     """
+=======
+>>>>>>> e2f6feaf639fb15d831c1ba60ff29a7e82e18314
     try:
       with open(self.token_file, "r") as token_file:
         self.refresh_token = token_file.read()
