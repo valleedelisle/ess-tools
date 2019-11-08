@@ -26,7 +26,7 @@ def parse_args():
   """
   parser = argparse.ArgumentParser(description='Hydra Case notifier Daemon')
   parser.add_argument('--debug',
-                      default=False,
+                      default=True,
                       action='store_true',
                       help='Display debug information')
   parser.add_argument('-l',

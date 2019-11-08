@@ -8,12 +8,14 @@ import sys
 import os
 sys.path.insert(0, os.getcwd())
 
+print("Environ: %s" % (os.environ))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 from lib.config import Config                                                                                                                                                                                                                 
 CONF = Config(config_file="hydra-notifierd.conf")
+print("Configuration %s" % CONF.sql['database'])
 config.set_main_option('sqlalchemy.url', CONF.sql['database'])
 
 

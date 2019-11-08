@@ -57,7 +57,8 @@ metadata = DeclarativeBase.metadata
 
 def init_model(connection_string):
   """Call me before using any of the tables or classes in the model."""
-  engine = sa.create_engine(connection_string, echo=False)
+  print("Connection String %s" % connection_string)
+  engine = sa.create_engine(connection_string, echo=True)
   session.configure(bind=engine)
 
 #from db.models.events import Event # pylint: disable=wrong-import-position
