@@ -5,6 +5,8 @@ Returns the configuration object
 import configparser
 from os import environ
 import re
+import logging
+LOG = logging.getLogger("root.config")
 
 class CaseConfigParser(configparser.SafeConfigParser):# pylint: disable=too-many-ancestors
   """
@@ -21,8 +23,10 @@ class Config(object): # pylint: disable=useless-object-inheritance,too-few-publi
   def __init__(self, config_file=None):
     # Since we use dynamic service names, and configparser doesn't support nested interpolation
     # we need to rewrite environment to set MARIADB_SERVICE_HOST and MARIADB_SERVICE_PORT
+    instance_name = environ['INSTANCE_NAME'].replace('-', '_').upper()
+    pattern = r'^' + re.escape(instance_name) + r'_(MARIADB_SERVICE_(HOST|PORT))$'
     for key in environ:
-      match = re.match('.*(MARIADB_SERVICE_(HOST|PORT))', key)
+      match = re.match(pattern, key)
       if match:
         environ[match.group(1)] = environ[key]
     config = CaseConfigParser(environ)
