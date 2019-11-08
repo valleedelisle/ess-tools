@@ -26,11 +26,8 @@ class Config(object): # pylint: disable=useless-object-inheritance,too-few-publi
     instance_name = environ['INSTANCE_NAME'].replace('-', '_').upper()
     pattern = r'^' + re.escape(instance_name) + r'_(MARIADB_SERVICE_(HOST|PORT))$'
     for key in environ:
-      print("Checking %s = %s Pattern: %s Instancename: %s" %
-            (key, environ[key], pattern, instance_name))
       match = re.match(pattern, key)
       if match:
-        print("MATCH: %s = %s = %s" % (match.group(1), key, environ[key]))
         environ[match.group(1)] = environ[key]
     config = CaseConfigParser(environ)
     config.read(config_file)
