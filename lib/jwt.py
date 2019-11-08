@@ -33,9 +33,15 @@ class Jwt():
     self.url = conf.DEFAULT['openid_url']
     self.expiration_time = None
     self.token = None
+    self.refresh_token = None
     self.conf = conf
     self.token_file = self.conf.DEFAULT['jwt_refresh_token_path']
     LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
+
+  def get_refresh_token(self):
+    """
+    Function that tries to determine a refresh_token
+    """
     try:
       with open(self.token_file, "r") as token_file:
         self.refresh_token = token_file.read()
@@ -52,12 +58,15 @@ class Jwt():
     Function that refreshes an access_token
     using the existing refresh_token
     """
-    data = {'refresh_token': '%s' % self.refresh_token,
-            'grant_type': 'refresh_token',
-            'client_id': 'hydra-client-cli'}
-    now = datetime.now()
-    req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
-    LOG.debug("Response from refresh: %s", req.resp_data)
+    req = None
+    while not req:
+      self.get_refresh_token()
+      data = {'refresh_token': '%s' % self.refresh_token,
+              'grant_type': 'refresh_token',
+              'client_id': 'hydra-client-cli'}
+      now = datetime.now()
+      req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
+      LOG.debug("Response from refresh: %s", req.resp_data)
     self.token = req.resp_data['access_token']
     self.refresh_token = req.resp_data['refresh_token']
     self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])

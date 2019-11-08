@@ -57,6 +57,7 @@ metadata = DeclarativeBase.metadata
 
 def init_model(connection_string):
   """Call me before using any of the tables or classes in the model."""
+  print("Connection String %s" % connection_string)
   engine = sa.create_engine(connection_string, echo=False)
   session.configure(bind=engine)
 
