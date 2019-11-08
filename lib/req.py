@@ -104,3 +104,10 @@ class Req(): # pylint: disable=too-many-instance-attributes
     if self.response != 200:
       LOG.error("Response not 200 (%s), sleeping for 10 seconds", self.response)
       sleep(10)
+
+  def __repr__(self):
+    return "%s(%s)" % (
+      (self.__class__.__name__),
+      ', '.join(["%s=%r" % (key, getattr(self, key))
+                 for key in sorted(self.__dict__.keys())
+                 if not key.startswith('_')]))
