@@ -77,13 +77,13 @@ class Req(): # pylint: disable=too-many-instance-attributes
       LOG.debug("Header: %s", self.headers)
       LOG.info("Verb: %s URL: %s Data: %s", self.verb, self.url, data)
       req = self.http.request(self.verb, self.url, body=data, headers=self.headers)
-      if not self.token and req.status == 400:
-        return None
       self.response = req.status
       try:
         self.resp_data = json.loads(req.data.decode('utf-8'))
       except json.decoder.JSONDecodeError:
         self.resp_data = req.data
+      if not self.token and req.status == 400:
+        return
       self.validate_response()
 
   def validate_response(self):
@@ -104,3 +104,10 @@ class Req(): # pylint: disable=too-many-instance-attributes
     if self.response != 200:
       LOG.error("Response not 200 (%s), sleeping for 10 seconds", self.response)
       sleep(10)
+
+  def __repr__(self):
+    return "%s(%s)" % (
+      (self.__class__.__name__),
+      ', '.join(["%s=%r" % (key, getattr(self, key))
+                 for key in sorted(self.__dict__.keys())
+                 if not key.startswith('_')]))

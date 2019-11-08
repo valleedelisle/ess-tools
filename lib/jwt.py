@@ -58,21 +58,23 @@ class Jwt():
     Function that refreshes an access_token
     using the existing refresh_token
     """
-    req = None
-    while not req:
-      self.get_refresh_token()
-      data = {'refresh_token': '%s' % self.refresh_token,
-              'grant_type': 'refresh_token',
-              'client_id': 'hydra-client-cli'}
-      now = datetime.now()
-      req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
-      LOG.debug("Response from refresh: %s", req.resp_data)
+    self.get_refresh_token()
+    data = {'refresh_token': '%s' % self.refresh_token,
+            'grant_type': 'refresh_token',
+            'client_id': 'hydra-client-cli'}
+    now = datetime.now()
+    req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
+    LOG.debug("Response from refresh: %s", req)
+    if req.response != 200:
+      LOG.error("Unable to refresh token: %s", req)
+      sys.exit(1)
     self.token = req.resp_data['access_token']
     self.refresh_token = req.resp_data['refresh_token']
     self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])
     # We need to keep a persistent copy of the refresh_token for rebuilds
     with open(self.token_file, "w") as token_file:
       token_file.write(self.refresh_token)
+    LOG.info("Refreshed token, good until %s saved in %s", self.expiration_time, self.token_file)
 
   def get_token(self):
     """
