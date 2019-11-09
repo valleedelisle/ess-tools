@@ -77,13 +77,13 @@ class Req(): # pylint: disable=too-many-instance-attributes
       LOG.debug("Header: %s", self.headers)
       LOG.info("Verb: %s URL: %s Data: %s", self.verb, self.url, data)
       req = self.http.request(self.verb, self.url, body=data, headers=self.headers)
-      if not self.token and req.status == 400:
-        return None
       self.response = req.status
       try:
         self.resp_data = json.loads(req.data.decode('utf-8'))
       except json.decoder.JSONDecodeError:
         self.resp_data = req.data
+      if not self.token and req.status == 400:
+        return
       self.validate_response()
 
   def validate_response(self):
