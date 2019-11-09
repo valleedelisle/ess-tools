@@ -48,7 +48,6 @@ test2:
     - oc delete persistentvolumeclaims -l "set=$APP"
 
 .deploy: &deploy
-  <<: *get_oc
   script:
     - echo "$APP"
     - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
@@ -57,6 +56,8 @@ test2:
     - docker
 
 review:
+  <<: *get_oc
+  <<: *clean_env
   <<: *deploy
   stage: review
   variables:
@@ -92,6 +93,7 @@ stop-review:
     - docker
 
 staging:
+  <<: *get_oc
   <<: *deploy
   stage: staging
   variables:
