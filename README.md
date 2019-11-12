@@ -48,7 +48,7 @@ bug-report.py --customer NAME-OF-CUSTOMER --get-bz
 Make sure you filled the `airtable` and `bugzilla` configuration and that you have a `base_id` defined in the `customer`'s section.
 
 
-## Installation
+## Deploy manually
 
 - Clone this repository
 ```
@@ -87,9 +87,39 @@ persistentvolumeclaim "mariadb" deleted
 secret "ess-notifier-mariadb-persistent" deleted
 ```
 
+## Automated deployment
+The `.gitlab-ci.yaml` file will generate all the necessary actions for automated deployment and validation with pipelines. 
+
+### Create gitlab service account
+```
+$ oc create serviceaccount gitlab-ci
+# Not sure if it's really necessary to give this account admin, but I don't have time to optimize this for now.
+$ oc policy add-role-to-user admin system:serviceaccount:ess:gitlab-ci
+$ oc serviceaccounts get-token gitlab-ci
+```
+### Adding ssh keys for source repo
+```
+$ oc annotate secret/gitlab-osc 'build.openshift.io/source-secret-match-uri-1=ssh://git@gitlab.cee.redhat.com:dvalleed/ess-tools.git'
+```
+
+### Expired tokens
+The initial token is stored in the environment of the Deployment in the `JWT_REFRESH_TOKEN` variable. Subsequent refresh tokens are stored in the alembic persistent volume connected to the pod, `.jwt_refresh_token`.
+
+Sometimes, if the pod hasn't been running for more than 15 minutes, we might end up in a situation where all the known refresh tokens are expired. We need to generate a new one and pass it in the environment like this:
+```
+$ oc login https://paas.psi.redhat.com:443 --username=myuser --password=mypass
+$ oc set env dc/ess-notifier JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
+```
+
+### Updating the secret configuration
+All the stages of the deployment are using the same secret configuration which contains the account of the customer(s), api keys, etc. Sometimes, we might have to update this configuration.
+
+```
+$ oc create secret generic ess-notifier-config --from-file hydra-notifierd-secrets.conf --from-file service-account.json
+```
+
 ## TODO
 - Complete automatic reporting of events twice per day
-- Autorebuild on commit
 
 ## Author
 David Vallee Delisle <dvd@redhat.com>
