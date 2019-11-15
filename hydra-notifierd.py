@@ -31,7 +31,7 @@ def parse_args():
                       help='Display debug information')
   parser.add_argument('-l',
                       '--log-file',
-                      default='hydra-notifierd.log',
+                      default='alembic/hydra-notifierd.log',
                       help='Log file')
   parser.add_argument('-w', '--working-dir', default='./')
   parser.add_argument('-c',
