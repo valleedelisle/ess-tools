@@ -97,7 +97,7 @@ class Jwt():
       return
     if req.response != 200:
       LOG.error("Failed to refresh_token, update JWT_REFRESH_TOKEN in environment")
-      sys.exit(1)
+      #sys.exit(1)
 
   def get_token(self):
     """
