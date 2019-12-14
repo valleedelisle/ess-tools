@@ -3,45 +3,11 @@ Class that manages the JWT
 """
 
 import sys
-from os import environ
 import logging
 from datetime import datetime, timedelta
 from lib.req import Req
 
 LOG = logging.getLogger("root.jwt")
-
-class RefreshToken():
-  """
-  refresh_token object
-  """
-  def __init__(self, conf):
-    self.token_file = conf.DEFAULT['jwt_refresh_token_path']
-    self.file = None
-    self.env = None
-    self.get()
-
-  def get(self):
-    """
-    Find refresh_token
-    """
-    try:
-      with open(self.token_file, "r") as token_file:
-        self.file = token_file.read()
-    except: # pylint: disable=bare-except
-      self.file = None
-      LOG.warning("No token in file %s", self.token_file)
-    try:
-      self.env = environ['JWT_REFRESH_TOKEN']
-    except NameError:
-      LOG.error("Missing refresh_token in environment: %s", environ)
-      sys.exit(1)
-
-  def save(self, token):
-    """
-    Function to save a new refresh token to a file
-    """
-    with open(self.token_file, "w") as token_file:
-      token_file.write(token)
 
 class Jwt():
   """
@@ -50,6 +16,8 @@ class Jwt():
   curl -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" \
    https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
   curl -X POST -d "refresh_token=xxx&grant_type=refresh_token&client_id=hydra-client-cli" \
+    https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+  curl --data "grant_type=client_credentials&client_id=ess-automation&client_secret={secret}" \
     https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
 
   returns: {
@@ -69,35 +37,35 @@ class Jwt():
     self.token = None
     self.conf = conf
     LOG.level = 10 if conf.notifierd.getboolean('debug') else 20
+    self.hydra_username = None
+    self.hydra_password = None
+    try:
+      self.hydra_username = conf.hydra['username']
+      self.hydra_password = conf.hydra['password']
+    except KeyError:
+      LOG.error("No credentials defined for hydra in config")
+      sys.exit(1)
+
 
   def refresh(self):
     """
     Function that refreshes an access_token
     using the existing refresh_token
     """
-    refresh_tokens = RefreshToken(self.conf)
-    for method in ['file', 'env']:
-      refresh_token = getattr(refresh_tokens, method)
-      data = {'refresh_token': '%s' % refresh_token,
-              'grant_type': 'refresh_token',
-              'client_id': 'hydra-client-cli'}
-      now = datetime.now()
-      req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
-      LOG.debug("Response from refresh: %s", req)
-      if req.response != 200:
-        LOG.error("Unable to refresh token: %s", req)
-        continue
-      self.token = req.resp_data['access_token']
-      self.refresh_token = req.resp_data['refresh_token']
-      self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])
-      # We need to keep a persistent copy of the refresh_token for rebuilds
-      refresh_tokens.save(self.refresh_token)
-      LOG.info("Refreshed token, good until %s saved in %s", self.expiration_time,
-               refresh_tokens.token_file)
-      return
+    data = {'grant_type': 'client_credentials',
+            'client_id': self.hydra_username,
+            'client_secret': self.hydra_password
+           }
+    now = datetime.now()
+    req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
+    LOG.debug("Response from refresh: %s", req)
     if req.response != 200:
-      LOG.error("Failed to refresh_token, update JWT_REFRESH_TOKEN in environment")
-      #sys.exit(1)
+      LOG.error("Unable to refresh token: %s", req)
+      sys.exit(1)
+    self.token = req.resp_data['access_token']
+    self.refresh_token = req.resp_data['refresh_token']
+    self.expiration_time = now + timedelta(seconds=req.resp_data['expires_in'])
+    LOG.info("Refreshed token, good until %s", self.expiration_time)
 
   def get_token(self):
     """
