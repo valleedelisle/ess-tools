@@ -57,6 +57,8 @@ objects:
     strategy:
       sourceStrategy:
         env:
+        - name: GIT_SSL_NO_VERIFY
+          value: "true"
         - name: INSTANCE_NAME
           value: ${NAME}
         - name: PIP_INDEX_URL
