@@ -52,9 +52,10 @@ class Jwt():
     Function that refreshes an access_token
     using the existing refresh_token
     """
-    data = {'grant_type': 'client_credentials',
-            'client_id': self.hydra_username,
-            'client_secret': self.hydra_password
+    data = {'grant_type': 'password',
+            'client_id': 'hydra-client-cli',
+            'username': self.hydra_username,
+            'password': self.hydra_password
            }
     now = datetime.now()
     req = Req(verb='POST', url=self.url, data=data, conf=self.conf)
