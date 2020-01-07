@@ -5,16 +5,16 @@ labels:
   template: ess-notifier
 message: 'The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
   For more information about using this template, including OpenShift considerations,
-  see https://github.com/valleedelisle/ess-tools'
+  see https://gitlab.cee.redhat.com/dvalleed/ess-tools'
 metadata:
   annotations:
-    description: https://github.com/valleedelisle/ess-tools
+    description: https://gitlab.cee.redhat.com/dvalleed/ess-tools
     iconClass: icon-python
     openshift.io/display-name: Enhanced Solution Support Notification Tool
-    openshift.io/documentation-url: https://github.com/valleedelisle/ess-tools
+    openshift.io/documentation-url: https://gitlab.cee.redhat.com/dvalleed/ess-tools
     openshift.io/long-description: ''
     openshift.io/provider-display-name: Red Hat, Inc.
-    openshift.io/support-url: https://access.redhat.com
+    openshift.io/support-url: https://gitlab.cee.redhat.com/dvalleed/ess-tools
     tags: quickstart,python
     template.openshift.io/bindable: 'false'
   name: ess-notifier
@@ -51,9 +51,14 @@ objects:
         ref: ${SOURCE_REPOSITORY_REF}
         uri: ${SOURCE_REPOSITORY_URL}
       type: Git
+      env:
+        - name: GIT_SSL_NO_VERIFY
+          value: "true"
     strategy:
       sourceStrategy:
         env:
+        - name: GIT_SSL_NO_VERIFY
+          value: "true"
         - name: INSTANCE_NAME
           value: ${NAME}
         - name: PIP_INDEX_URL
@@ -300,7 +305,7 @@ parameters:
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: https://github.com/valleedelisle/ess-tools.git
+  value: https://gitlab.cee.redhat.com/dvalleed/ess-tools.git
 - description: Set this to a branch name, tag or other ref of your repository if you
     are not using the default branch.
   displayName: Git Reference
