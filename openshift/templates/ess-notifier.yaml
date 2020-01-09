@@ -61,8 +61,6 @@ objects:
           value: "true"
         - name: INSTANCE_NAME
           value: ${NAME}
-        - name: PIP_INDEX_URL
-          value: ${PIP_INDEX_URL}
         from:
           kind: ImageStreamTag
           name: python:${PYTHON_VERSION}
@@ -133,21 +131,23 @@ objects:
           image: ' '
           name: ${NAME}
           resources:
+            requests:
+              memory: ${MEMORY_LIMIT}
             limits:
               memory: ${MEMORY_LIMIT}
           volumeMounts:
-          - name: ${NAME}-config
+          - name: ${APP_CONFIG}
             mountPath: /opt/app-root/src/hydra-notifierd-secrets.conf
             subPath: hydra-notifierd-secrets.conf
-          - name: ${NAME}-config
+          - name: ${APP_CONFIG}
             mountPath: /opt/app-root/src/service-account.json
             subPath: service-account.json
           - mountPath: /opt/app-root/src/alembic/versions
             name: ${NAME}-alembic-versions
         volumes: 
-        - name: "${NAME}-config"
+        - name: "${APP_CONFIG}"
           secret:
-            secretName: ess-notifier-config
+            secretName: "${APP_CONFIG}"
         - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
             claimName: "${NAME}-alembic-versions"
@@ -245,6 +245,8 @@ objects:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           resources:
+            requests:
+              memory: ${MEMORY_MARIADB_LIMIT}
             limits:
               memory: ${MEMORY_MARIADB_LIMIT}
           volumeMounts:
@@ -290,12 +292,12 @@ parameters:
   displayName: Memory Limit
   name: MEMORY_LIMIT
   required: true
-  value: 512Mi
+  value: 2048Mi
 - description: Maximum amount of memory the MariaDB container can use.
   displayName: Memory Limit (MariaDB)
   name: MEMORY_MARIADB_LIMIT
   required: true
-  value: 512Mi
+  value: 1024Mi
 - description: Volume space available for data, e.g. 512Mi, 2Gi
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
@@ -354,12 +356,9 @@ parameters:
 - description: Relative path to Gunicorn configuration file (optional).
   displayName: Application Configuration File Path
   name: APP_CONFIG
+  value: ess-notifier-config
 - description: Set this to a long random string.
   displayName: Secret Key
   from: '[\w]{50}'
   generate: expression
   name: SECRET_KEY
-- description: The custom PyPi index URL
-  displayName: Custom PyPi Index URL
-  name: PIP_INDEX_URL
-  value: ''
