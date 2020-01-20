@@ -61,6 +61,7 @@ class Case(DeclarativeBase):
     self.accountName = 'unknown'
     self.accountNumber = 'unknown' # pylint: disable=invalid-name
     self.caseContact = 'unknown' # pylint: disable=invalid-name
+    kwargs['subject'] = bytes(kwargs['subject'], 'utf-8').decode('utf-8', 'ignore')
     # We update the case model object
     self.__dict__.update(kwargs)
     try:
