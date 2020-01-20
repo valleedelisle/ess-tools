@@ -61,16 +61,17 @@ $ git clone git@github.com:valleedelisle/ess-tools.git
 ```
 oc create secret generic ess-notifier-config --from-file hydra-notifierd-secrets.conf --from-file service-account.json
 ```
-- Generate a JWT token to save in an environment variable
+- Add the template in openshift:
 ```
-$ export JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
-```
-- Deploy the app
-```
-$ oc new-app openshift/templates/python-mariadb-persistent.yaml --name notifier -e JWT_REFRESH_TOKEN=$JWT_REFRESH_TOKEN
+$ oc create -f openshift/templates/ess-notifier.yaml
 ```
 
-- To cleanup the deploy, you can use the `delete_oc_resource.sh` script
+- Deploy the app
+```
+$ oc new-app ess-notifier
+```
+
+- To cleanup the deployment, you can use the `delete_oc_resource.sh` script
 ```
 $ ./resources/delete_oc_resources.sh 
 pod "ess-notifier-mariadb-persistent-1-build" deleted
@@ -102,15 +103,6 @@ $ oc serviceaccounts get-token gitlab-ci
 $ oc annotate secret/gitlab-osc 'build.openshift.io/source-secret-match-uri-1=ssh://git@gitlab.cee.redhat.com:dvalleed/ess-tools.git'
 ```
 
-### Expired tokens
-The initial token is stored in the environment of the Deployment in the `JWT_REFRESH_TOKEN` variable. Subsequent refresh tokens are stored in the alembic persistent volume connected to the pod, `.jwt_refresh_token`.
-
-Sometimes, if the pod hasn't been running for more than 15 minutes, we might end up in a situation where all the known refresh tokens are expired. We need to generate a new one and pass it in the environment like this:
-```
-$ oc login https://paas.psi.redhat.com:443 --username=myuser --password=mypass
-$ oc set env dc/ess-notifier JWT_REFRESH_TOKEN=$(curl -s -d "username=$RHN_USER&password=$RHN_PASS&grant_type=password&client_id=hydra-client-cli" https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token | jq -r '.refresh_token')
-```
-
 ### Updating the secret configuration
 All the stages of the deployment are using the same secret configuration which contains the account of the customer(s), api keys, etc. Sometimes, we might have to update this configuration.
 
@@ -120,6 +112,7 @@ $ oc create secret generic ess-notifier-config --from-file hydra-notifierd-secre
 
 ## TODO
 - Complete automatic reporting of events twice per day
+- Automatically spawn mariadb containers when a mysqldump is attached to a monitored case
 
 ## Author
 David Vallee Delisle <dvd@redhat.com>
