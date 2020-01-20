@@ -61,8 +61,6 @@ objects:
           value: "true"
         - name: INSTANCE_NAME
           value: ${NAME}
-        - name: PIP_INDEX_URL
-          value: ${PIP_INDEX_URL}
         from:
           kind: ImageStreamTag
           name: python:${PYTHON_VERSION}
@@ -136,18 +134,18 @@ objects:
             limits:
               memory: ${MEMORY_LIMIT}
           volumeMounts:
-          - name: ${NAME}-config
+          - name: ${APP_CONFIG}
             mountPath: /opt/app-root/src/hydra-notifierd-secrets.conf
             subPath: hydra-notifierd-secrets.conf
-          - name: ${NAME}-config
+          - name: ${APP_CONFIG}
             mountPath: /opt/app-root/src/service-account.json
             subPath: service-account.json
           - mountPath: /opt/app-root/src/alembic/versions
             name: ${NAME}-alembic-versions
         volumes: 
-        - name: "${NAME}-config"
+        - name: "${APP_CONFIG}"
           secret:
-            secretName: ess-notifier-config
+            secretName: "${APP_CONFIG}"
         - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
             claimName: "${NAME}-alembic-versions"
@@ -354,12 +352,9 @@ parameters:
 - description: Relative path to Gunicorn configuration file (optional).
   displayName: Application Configuration File Path
   name: APP_CONFIG
+  value: ess-notifier-config
 - description: Set this to a long random string.
   displayName: Secret Key
   from: '[\w]{50}'
   generate: expression
   name: SECRET_KEY
-- description: The custom PyPi index URL
-  displayName: Custom PyPi Index URL
-  name: PIP_INDEX_URL
-  value: ''

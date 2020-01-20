@@ -13,6 +13,8 @@ stages:
 variables:
   OPENSHIFT_SERVER: https://paas.psi.redhat.com:443
   OPENSHIFT_DOMAIN: paas.psi.redhat.com
+  APP_CONFIG: ess-notifier-config
+
   # Configure this variable in Secure Variables:
   # OPENSHIFT_TOKEN: my.openshift.token
 test1:
@@ -50,7 +52,8 @@ test2:
 .deploy: &deploy
   script:
     - echo "$APP"
-    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
+    - echo "$APP_CONFIG"
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p APP_CONFIG="$APP_CONFIG" -p NAME="$APP" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
       #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker
@@ -63,6 +66,7 @@ review:
   variables:
     APP: review-$CI_COMMIT_REF_NAME
     APP_HOST: $CI_PROJECT_NAME-$CI_ENVIRONMENT_SLUG.$OPENSHIFT_DOMAIN
+    APP_CONFIG: staging-ess-notifier-config
   environment:
     name: review/$CI_COMMIT_REF_NAME
     url: http://$CI_PROJECT_NAME-$CI_ENVIRONMENT_SLUG.$OPENSHIFT_DOMAIN
@@ -99,6 +103,7 @@ staging:
   variables:
     APP: staging-ess-notifier
     APP_HOST: $CI_PROJECT_NAME-staging.$OPENSHIFT_DOMAIN
+    APP_CONFIG: staging-ess-notifier-config
   environment:
     name: staging
     url: http://$CI_PROJECT_NAME-staging.$OPENSHIFT_DOMAIN
