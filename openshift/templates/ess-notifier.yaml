@@ -131,6 +131,8 @@ objects:
           image: ' '
           name: ${NAME}
           resources:
+            requests:
+              memory: ${MEMORY_LIMIT}
             limits:
               memory: ${MEMORY_LIMIT}
           volumeMounts:
@@ -243,6 +245,8 @@ objects:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           resources:
+            requests:
+              memory: ${MEMORY_MARIADB_LIMIT}
             limits:
               memory: ${MEMORY_MARIADB_LIMIT}
           volumeMounts:
@@ -288,12 +292,12 @@ parameters:
   displayName: Memory Limit
   name: MEMORY_LIMIT
   required: true
-  value: 512Mi
+  value: 2048Mi
 - description: Maximum amount of memory the MariaDB container can use.
   displayName: Memory Limit (MariaDB)
   name: MEMORY_MARIADB_LIMIT
   required: true
-  value: 512Mi
+  value: 1024Mi
 - description: Volume space available for data, e.g. 512Mi, 2Gi
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
