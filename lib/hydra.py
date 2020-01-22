@@ -4,7 +4,7 @@ Class that maps to the hydra api
 
 from urllib.parse import urlencode
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from db.models.cases import Case # pylint: disable=relative-beyond-top-level
 from lib.req import Req
 
@@ -16,7 +16,9 @@ class Hydra():
   We need to pass the global config and the customer section's name
   """
   def __init__(self, conf, customer, jwt):
-    self.api_url = conf.hydra['url']
+    self.cases_api_url = conf.hydra['cases_url']
+    self.attachments_api_url = conf.hydra['attachments_url']
+    self.attachment_time = int(conf.hydra['attachment_time'])
     self.conf = conf
     self.customer = customer
     self.token = jwt.get_token()
@@ -45,7 +47,7 @@ class Hydra():
       hcase = Case(**case)
       last_update = datetime.now() - hcase.lastModifiedDate
       case_number = hcase.caseNumber
-      if last_update.days > self.conf.notifierd.getint('expire'):
+      if last_update > timedelta(days=self.conf.notifierd.getint('expire')):
         LOG.debug("Ignoring case %s because %s days old", case_number, last_update.days)
         continue
       case_sbr_list = hcase.sbrGroup.split(";")
@@ -60,7 +62,10 @@ class Hydra():
                     "included SBR list: %s", case_number, case_sbr_list, included_sbr_list)
           continue
       case_list.append(hcase)
-
+      if last_update <= timedelta(minutes=self.attachment_time):
+        LOG.debug("Checking attachments for case %s" % case_number)
+        self.find_attachments(case_number)
+ 
     return case_list
 
   def build_query(self):
@@ -78,20 +83,29 @@ class Hydra():
     query['limit'] = customer_conf.getint('limit')
     return query
 
-  def get(self, endpoint, query):
+  def get_url(self, attachment=False):
+    """
+    Returns the right url, wether we want to poke at the attachment API or the normal
+    case API.
+    """
+    return self.cases_api_url if not attachment else self.attachments_api_url
+
+  def get(self, endpoint, query=None, attachment=False):
     """
     Wrapper for the API call
     """
-    url = self.api_url + "/" + endpoint + "?" + urlencode(query)
+    url = self.get_url(attachment) + "/" + endpoint
+    if query:
+      url += "?" + urlencode(query)
     LOG.debug("Getting Hydra on %s", url)
     return Req(verb='GET', url=url, conf=self.conf, token=self.token).resp_data
 
-  def put(self, endpoint, data):
+  def put(self, endpoint, data, attachment=False):
     """
     Function that sends a PUT request to the hydra API
     Used in case tagging
     """
-    url = self.api_url + "/" + endpoint
+    url = self.get_url(attachment) + "/" + endpoint
     LOG.debug("Putting Hydra on %s Data: %s", url, data)
     return Req(verb='PUT', url=url, data=data, token=self.token).resp_data
 
@@ -99,7 +113,50 @@ class Hydra():
     """
     Wrapper that gets all the cases and returns a dict
     """
-    return self.get("cases", query)
+    return self.get("cases", query=query)
+
+  def get_attachments(self, case_id):
+    """
+    Wrapper that gets all the cases and returns a dict
+    {
+      "caseNumber": "xxx",
+      "uuid": "dbef0421-6e6b-483b-a77a-db3fac4175f0",
+      "checksum": "7d516d267a95860258173b3ead707da83c5df31cc76c7d99aa7433c0d459f5d5",
+      "createdDate": "2020-01-17T22:15:55Z",
+      "createdBy": "Customer Name",
+      "fileName": "sosreport-director-xxx-ifenxhh.tar.xz",
+      "fileType": "application/x-xz",
+      "id": "blabla",
+      "isArchived": false,
+      "isDeprecated": false,
+      "isPrivate": false,
+      "lastModifiedDate": "2020-01-17T22:15:55Z",
+      "link": "https://access.redhat.com/hydra/rest/cases/xxx/attachments/xxx",
+      "modifiedBy": "Customer Name",
+      "size": 431430364,
+      "sizeKB": 421318.71,
+      "downloadRestricted": false
+    },
+    """
+    endpoint = "cases/" + case_id + "/attachments"
+    return self.get(endpoint, query=None, attachment=True)
+
+  def filter_attachments(self, attachment):
+    """
+    Function to filter attachments from list based on specific criteria
+    """
+    attachment_date = datetime.strptime(attachment["createdDate"], "%Y-%m-%dT%H:%M:%SZ")
+    if (datetime.now() - attachment_date > timedelta(minutes=self.attachment_time) and
+        ".sql" in attachment["fileName"]):
+      return True
+
+  def find_attachments(self, case_id):
+    """
+    Returns a list of filtered attachments
+    """
+    all_att = self.get_attachments(case_id)
+    attachments = list(filter(self.filter_attachments, all_att))
+    LOG.debug("Filtered Attachments: %s" % attachments)
 
   def set_tags(self, case_id, tags):
     """

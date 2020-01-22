@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "test-dvd"
+spec:
+  type: NodePort 
+  ports:
+  - name: mariadb
+    port: 3306
+    protocol: TCP
+    selector:
+      app: test-dvd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-dvd-claim
+  labels:
+    app: test-dvd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "test-dvd"
+spec:
+  selector:
+    matchLabels:
+      app: test-dvd 
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: test-dvd
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_USER
+          value: "test-dvd"
+        - name: MYSQL_PASSWORD
+          value: "q1w2e3"
+        - name: MYSQL_ROOT_PASSWORD
+          value: "q1w2e3"
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: test-dvd-vol
+          subPath: mysql
+        image: 'mariadb:latest'
+        imagePullPolicy: IfNotPresent
+        name: mariadb
+        ports:
+        - containerPort: 3306
+        resources:
+          limits:
+            memory: 500Mi
+      volumes:
+      - name: "test-dvd-vol"
+        persistentVolumeClaim:
+          claimName: "test-dvd-claim"

@@ -136,6 +136,9 @@ objects:
             limits:
               memory: ${MEMORY_LIMIT}
           volumeMounts:
+          - name: ${NAME}-k8config
+            mountPath: /opt/app-root/src/.kube/config
+            subPath: config
           - name: ${NAME}-config
             mountPath: /opt/app-root/src/hydra-notifierd-secrets.conf
             subPath: hydra-notifierd-secrets.conf
@@ -148,6 +151,9 @@ objects:
         - name: "${NAME}-config"
           secret:
             secretName: ess-notifier-config
+        - name: "${NAME}-k8config"
+          secret:
+            secretName: ess-notifier-k8config 
         - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
             claimName: "${NAME}-alembic-versions"
