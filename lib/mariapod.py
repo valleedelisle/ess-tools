@@ -21,6 +21,8 @@ class Mariapod(Pod):
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
     super(Mariapod, self).__init__()
+
+  def create(self):
     self.post_pvc()
     self.post_svc()
     self.post_app()

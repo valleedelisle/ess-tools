@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import logging
 from kubernetes import client
 import argparse
 
+LOG = logging.getLogger("push_maria")
 from lib.mariapod import Mariapod
 from lib.config import Config
  
@@ -14,6 +16,10 @@ def parse_args():
                       action='store_true',
                       default=False,
                       help='Display debug information')
+  parser.add_argument('--list',
+                      action='store_true',
+                      default=False,
+                      help='Only list stuff')
   parser.add_argument('-t', '--token',
                       action='store',
                       type=str,
@@ -61,8 +67,8 @@ def main():
     args['cluster'] = CONF.paas['url']
   if not args['token']:
     args['token'] = CONF.paas['token']
-  db_object = Mariapod(**args)
-  print(db_object.resp)
+  maria = Mariapod(**args)
+  maria.check_pvc()
 
 
 if __name__ == '__main__':

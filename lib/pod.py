@@ -7,6 +7,16 @@ import logging
 LOG = logging.getLogger("root.pod")
 
 class Pod(object):
+  # List of objects
+  resource_list = {
+    'pvc': { 'long': 'persistent_volume_claim', 'api': 'core' },
+    'pv': {'long': 'persistent_volume', 'api': 'core' },
+    'svc': {'long': 'service', 'api': 'core' },
+    'pod': {'long': 'pod', 'api': 'core' },
+    'pod_template': {'long': 'pod_template', 'api': 'core' },
+    'app': {'long': 'deployment', 'api': 'apps' },
+  }
+
   def __init__(self):
     configuration = client.Configuration()
     configuration.host = self.cluster
@@ -16,6 +26,33 @@ class Pod(object):
     configuration.debug = self.debug
     self.core_api = client.CoreV1Api(client.ApiClient(configuration))
     self.apps_api = client.AppsV1Api(client.ApiClient(configuration))
+    for res in self.resource_list:
+      setattr(self, 'list_' + res, None)
+      self.make_methods(res)
+
+  def make_methods(self, res):
+    api = getattr(self, self.resource_list[res]['api'] + '_api')
+    def return_k8s_function(name):
+      func_get = getattr(api, name + self.resource_list[res]['long'])
+    def get(self):
+      func_get = return_k8s_function('list_namedspaced_')
+      setattr(self, "list_" + res, func_get(self.namespace))
+      LOG.debug('%s list: %s' % (res, getattr(self, 'list_' + res)))
+    setattr(self, 'get_' + res, get) 
+
+    def post(self):                  
+      gen_obj = getattr(self, res)
+      func_post = return_k8s_function('create_namedspaced_')
+      LOG.debug('%s Deployment %s' % gen_object)
+      self.resp = func_post(body=gen_obj, namespace=self.namespace)
+      LOG.debug('%s Deployment created. status="%s"' % (res, str(self.resp.status)))
+    setattr(self, 'post_' + res, post) 
+
+    def check(self):
+      list_obj = getattr(self, 'list_' + res)
+      for item in list_obj.items:
+        print(item.status.succeded)
+    setattr(self, 'check_' + res, check) 
 
   def label(self):
     return {'app': self.app_label + '-' + self.name}
@@ -55,7 +92,7 @@ class Pod(object):
     return client.V1Volume(name=self.name + '-' + self.volume_suffix,
                            persistent_volume_claim=claim)
 
-  def node_service(self):
+  def svc(self):
     """
     returns a service with NodePort
     """
@@ -101,30 +138,6 @@ class Pod(object):
         spec=spec
     )
   
-  def post_pvc(self):
-    pvc = self.pvc()
-    LOG.debug('PVC Deployment %s' % pvc)
-    self.resp = self.core_api.create_namespaced_persistent_volume_claim(
-        body=pvc,
-        namespace=self.namespace)
-    LOG.debug('PVC Deployment created. status="%s"' % str(self.resp.status))
-
-  def post_svc(self):
-    svc = self.node_service()
-    LOG.debug('SVC Deployment %s' % svc)
-    self.resp = self.core_api.create_namespaced_service(
-        body=svc,
-        namespace=self.namespace)
-    LOG.debug('SVC Deployment created. status="%s"' % str(self.resp.status))
-
-  def post_app(self):
-    app = self.pod()
-    LOG.debug('App Deployment %s' % app)
-    self.resp = self.apps_api.create_namespaced_deployment(
-        body=app,
-        namespace=self.namespace)
-    LOG.debug('App Deployment created. status="%s"' % str(self.resp))
-
   def __repr__(self):
     return '%s(%s)' % (
       (self.__class__.__name__),
