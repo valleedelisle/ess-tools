@@ -68,7 +68,10 @@ def main():
   if not args['token']:
     args['token'] = CONF.paas['token']
   maria = Mariapod(**args)
-  maria.check_pvc()
+  maria.check_pvc(maria)
+  maria.check_pv(maria)
+  maria.check_svc(maria)
+  maria.check_pod(maria)
 
 
 if __name__ == '__main__':

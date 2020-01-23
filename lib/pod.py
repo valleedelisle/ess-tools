@@ -17,32 +17,47 @@ class Pod(object):
     'app': {'long': 'deployment', 'api': 'apps' },
   }
 
+  connection_debug = False
   def __init__(self):
     configuration = client.Configuration()
     configuration.host = self.cluster
     configuration.api_key['authorization'] = self.token
     configuration.api_key_prefix['authorization'] = 'Bearer'
     configuration.verify_ssl=False
-    configuration.debug = self.debug
+    configuration.debug = self.connection_debug
     self.core_api = client.CoreV1Api(client.ApiClient(configuration))
     self.apps_api = client.AppsV1Api(client.ApiClient(configuration))
     for res in self.resource_list:
       setattr(self, 'list_' + res, None)
       self.make_methods(res)
+      if self.list:
+        func_get = getattr(self, 'get_' + res)
+        func_get(self)
 
   def make_methods(self, res):
     api = getattr(self, self.resource_list[res]['api'] + '_api')
     def return_k8s_function(name):
-      func_get = getattr(api, name + self.resource_list[res]['long'])
+      func_name = None
+      try:
+        func_name = getattr(api, name + self.resource_list[res]['long'])
+      except AttributeError:
+        LOG.debug("Resource %s returns an AttributeError" % res)
+      return func_name
+
     def get(self):
-      func_get = return_k8s_function('list_namedspaced_')
-      setattr(self, "list_" + res, func_get(self.namespace))
-      LOG.debug('%s list: %s' % (res, getattr(self, 'list_' + res)))
+      func_get = return_k8s_function('list_namespaced_')
+      if func_get:
+        try:
+          setattr(self, "list_" + res, func_get(self.namespace))
+        except client.rest.ApiException:
+          LOG.debug("API returned an error for resource %s" % res)
+          pass
+        LOG.debug('%s list: %s' % (res, getattr(self, 'list_' + res)))
     setattr(self, 'get_' + res, get) 
 
     def post(self):                  
       gen_obj = getattr(self, res)
-      func_post = return_k8s_function('create_namedspaced_')
+      func_post = return_k8s_function('create_namespaced_')
       LOG.debug('%s Deployment %s' % gen_object)
       self.resp = func_post(body=gen_obj, namespace=self.namespace)
       LOG.debug('%s Deployment created. status="%s"' % (res, str(self.resp.status)))
@@ -50,8 +65,11 @@ class Pod(object):
 
     def check(self):
       list_obj = getattr(self, 'list_' + res)
-      for item in list_obj.items:
-        print(item.status.succeded)
+      if list_obj:
+        for item in list_obj.items:
+          print(item.status)
+      else:
+        LOG.debug("No objects for resource %s" % res)
     setattr(self, 'check_' + res, check) 
 
   def label(self):
