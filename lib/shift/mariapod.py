@@ -1,4 +1,5 @@
 import logging
+import time
 from kubernetes import client
 from lib.base import Base
 from lib.shift.resources import Pvc, Pv, Svc, Pod, App
@@ -32,6 +33,7 @@ class Mariapod(Base):
     self.__dict__.update(kwargs)
     self.generate()
     self.create()
+    self.check()
 
   def generate(self):
     self.pvc = Pvc(self)
@@ -44,6 +46,11 @@ class Mariapod(Base):
     self.pvc.post()
     self.svc.post()
     self.app.post()
+
+  def check(self):
+    self.pvc.check()
+    self.pod.check()
+    self.app.check()
 
   def env(self):
     """
