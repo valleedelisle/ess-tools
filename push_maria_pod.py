@@ -3,9 +3,11 @@ import logging
 from kubernetes import client
 import argparse
 
-LOG = logging.getLogger("push_maria")
-from lib.mariapod import Mariapod
+from lib.log import Log
+from lib.shift.mariapod import Mariapod
 from lib.config import Config
+
+LOG = logging.getLogger("push_maria")
  
 def parse_args():
   """
@@ -62,16 +64,13 @@ def parse_args():
 
 def main():
   args = parse_args().__dict__
+  LOG = Log(debug=args['debug'], log_file=args['log_file'])
   CONF = Config(config_file=args['config_file'])
   if not args['cluster']:
     args['cluster'] = CONF.paas['url']
   if not args['token']:
     args['token'] = CONF.paas['token']
   maria = Mariapod(**args)
-  maria.check_pvc(maria)
-  maria.check_pv(maria)
-  maria.check_svc(maria)
-  maria.check_pod(maria)
 
 
 if __name__ == '__main__':
