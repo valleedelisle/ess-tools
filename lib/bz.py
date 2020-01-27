@@ -13,7 +13,7 @@ import urllib3
 from requests.exceptions import ChunkedEncodingError
 
 
-LOG = logging.getLogger("root.bz")
+LOG = logging.getLogger("bz")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

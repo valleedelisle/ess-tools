@@ -7,7 +7,7 @@ import urllib3
 from airtable import Airtable
 
 
-LOG = logging.getLogger("root.airtable")
+LOG = logging.getLogger("airtable")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

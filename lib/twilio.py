@@ -5,7 +5,7 @@ Twilio notification class
 import logging
 from twilio.rest import Client # pylint: disable=no-name-in-module,import-error
 
-LOG = logging.getLogger("root.twilio")
+LOG = logging.getLogger("twilio")
 
 class Twilio():
   """

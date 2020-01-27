@@ -11,7 +11,7 @@ from lib.gchat import Gchat
 from lib.twilio import Twilio
 from lib.mail import Email
 
-LOG = logging.getLogger("root.notification")
+LOG = logging.getLogger("notification")
 
 class Notification():
   """

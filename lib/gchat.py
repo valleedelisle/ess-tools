@@ -2,7 +2,7 @@
 Google chat object that is being sent to the gchat api
 """
 import logging
-LOG = logging.getLogger("lib.gchat")
+LOG = logging.getLogger("gchat")
 
 class Gchat():
   # pylint: disable=too-few-public-methods

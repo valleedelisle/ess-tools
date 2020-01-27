@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from lib.req import Req
 
-LOG = logging.getLogger("root.jwt")
+LOG = logging.getLogger("jwt")
 
 class Jwt():
   """

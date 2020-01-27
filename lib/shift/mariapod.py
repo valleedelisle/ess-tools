@@ -1,10 +1,12 @@
 import logging
 import time
+import traceback
 from kubernetes import client
+from lib.mysql_connector import MysqlConnect
 from lib.base import Base
 from lib.shift.resources import Pvc, Pv, Svc, Pod, App
 
-LOG = logging.getLogger("root.mariapod")
+LOG = logging.getLogger("mariapod")
 
 class Mariapod(Base):
   service_port = 3306
@@ -32,8 +34,21 @@ class Mariapod(Base):
     # Let's also store the arguments parsed
     self.__dict__.update(kwargs)
     self.generate()
-    self.create()
-    self.check()
+    if self.deploy:
+      self.create()
+      self.check()
+    elif self.delete_deploy:
+    #  self.pv.delete()
+      self.pvc.delete()
+      self.svc.delete()
+      self.pod.delete()
+      self.app.delete()
+    else:
+      LOG.info("Listing resources for name %s" % self.name)
+      self.pvc.show()
+      self.svc.show()
+      self.pod.show()
+      self.app.show()
 
   def generate(self):
     self.pvc = Pvc(self)
@@ -51,6 +66,18 @@ class Mariapod(Base):
     self.pvc.check()
     self.pod.check()
     self.app.check()
+    self.svc.check()
+
+  def load_db(self):
+    self.mysql = MysqlConnect()
+    try:
+      with open(self.dump_file) as f:
+          cursor.execute(f.read().decode('utf-8'), multi=True)
+    except Exception as error: # pylint: disable=broad-except
+      LOG.error("load_db() failed on %: %s" % (self.dump_file, error))
+      LOG.error("%s" % traceback.format_exc())
+      raise Exception('ImportError', 'Unable to import mysql file')
+
 
   def env(self):
     """

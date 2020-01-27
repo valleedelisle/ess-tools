@@ -3,7 +3,7 @@ from time import sleep
 from kubernetes import client
 from lib.base import Base
 
-LOG = logging.getLogger('root.shift.resource')
+LOG = logging.getLogger('shift')
 
 class ResourceBase(Base):
   long_name = None
@@ -13,7 +13,7 @@ class ResourceBase(Base):
   items = None
   connection_debug = False
   good_status = None
-  max_validation_retry = 30
+  max_validation_retries = 30
   api_list = {'core': 'CoreV1Api', 'apps': 'AppsV1Api'}
 
   def __init__(self):
@@ -63,7 +63,7 @@ class ResourceBase(Base):
     try:
       self.items = func(self.namespace, label_selector=self.label())
     except client.rest.ApiException as exc:
-      LOG.info("API returned an error for resource %s: %s" % (self.short_name, exc))
+      LOG.error("API returned an error for resource %s: %s" % (self.short_name, exc))
       pass
     LOG.debug('%s get_all: %s' % (self.short_name, self.items))
 
@@ -71,9 +71,9 @@ class ResourceBase(Base):
     func = getattr(self.api_connection, 'read_namespaced_' + self.long_name)
     try:
       self.item = func(namespace=self.namespace, name=name)
-      LOG.debug("Refreshing %s %s: %s" % (self.short_name, name, self.item))
+      self.LOG.debug("Refreshing %s %s: %s" % (self.short_name, name, self.item))
     except client.rest.ApiException as exc:
-      LOG.info("API returned an error for resource %s %s: %s" % (self.short_name, name, exc))
+      LOG.error("API returned an error for resource %s %s: %s" % (self.short_name, name, exc))
       pass
     LOG.debug('%s get %s: %s' % (self.short_name, name, self.item))
     return self.item
@@ -85,6 +85,24 @@ class ResourceBase(Base):
     self.resp = func(body=gen_obj, namespace=self.namespace)
     LOG.debug('%s Deployment created. status="%s"' % (self.short_name, str(self.resp.status)))
 
+  def delete(self):
+    self.get_all()
+    func = getattr(self.api_connection, 'delete_namespaced_' + self.long_name)
+    if self.items:
+      for item in self.items.items:
+        try:
+          resp = func(namespace=self.namespace, name=item.metadata.name)
+          LOG.info("Deleted %s %s: %s" % (self.short_name, item.metadata.name, resp))
+        except client.rest.ApiException as exc:
+          LOG.error("API returned an error for resource %s %s: %s" % (self.short_name, item.metadata.name, exc))
+          pass
+
+  def show(self):
+    self.get_all()
+    if self.items:
+      for item in self.items.items:
+        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status))
+
   def validate(self):
     if not self.good_status:
       return True
@@ -93,7 +111,6 @@ class ResourceBase(Base):
         if item.status.phase != self.good_status:
           return False
       return True
-
 
   def check(self):
     if not self.items:
@@ -104,8 +121,8 @@ class ResourceBase(Base):
       validate = False
       validation_retries = 0
       while validate is False:
-        validation_retrie += 1
-        if validation_retries >= self.max_validation_retry:
+        validation_retries += 1
+        if validation_retries >= self.max_validation_retries:
           LOG.debug("Object %s" % (self.items))
           LOG.error("Failed to validate %s" % (self.short_name))
           raise Exception('ValidationError', 'Unable to validate the creation of resource on Shift')
@@ -113,9 +130,8 @@ class ResourceBase(Base):
         LOG.debug("validate() returns %s" % (validate))
         if not validate:
           LOG.debug("No validation")
-        for item in self.items.items:
-          self.get_all()
-          LOG.debug("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status))
+        self.get_all()
+        LOG.debug("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status))
         sleep(2)
     else:
       LOG.error("No items returned by list_namespaced")
@@ -136,6 +152,13 @@ class Pvc(ResourceBase):
                                                    resources=requirements,
                                                    selector=self.selector())
     self.resource = client.V1PersistentVolumeClaim(metadata=self.metadata('claim'), spec=spec)
+  def show(self):
+    self.get_all()
+    if self.items:
+      for item in self.items.items:
+        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.phase))
+
+
 
 class Pv(ResourceBase):
   long_name = 'persistent_volume'
@@ -170,6 +193,14 @@ class Svc(ResourceBase):
                       spec=spec
     )
 
+  def show(self):
+    self.get_all()
+    if self.items:
+      for item in self.items.items:
+        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.load_balancer.ingress))
+
+
+
 class Pod(ResourceBase):
   long_name = 'pod'
   short_name = 'pod'
@@ -183,6 +214,13 @@ class Pod(ResourceBase):
                                        env=obj.env(),
                                        volume_mounts=obj.mounts(),
                                        ports=obj.ports())
+
+  def show(self):
+    self.get_all()
+    if self.items:
+      for item in self.items.items:
+        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.phase))
+
 
 
 class App(ResourceBase):
@@ -209,6 +247,14 @@ class App(ResourceBase):
         metadata=self.metadata(self.app_label),
         spec=spec
     )
+
+  def show(self):
+    self.get_all()
+    if self.items:
+      for item in self.items.items:
+        LOG.info("Type %s Item %s Available: %s Ready: %s" % (self.short_name, item.metadata.name, item.status.available_replicas, item.status.ready_replicas))
+
+
   def validate(self):
     if self.items:
       for item in self.items.items:

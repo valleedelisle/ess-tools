@@ -10,7 +10,7 @@ from time import sleep
 import http
 import urllib3
 
-LOG = logging.getLogger("root.req")
+LOG = logging.getLogger("req")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

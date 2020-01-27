@@ -15,32 +15,17 @@ class Log():
     self.level = logging.INFO
     if debug is True:
       self.level = logging.DEBUG
-    self.logging_config = dict(
-      version=1,
-      disable_existing_loggers=False,
-      formatters={
-        "f": {"format": '%(asctime)s %(name)s %(levelname)s %(message)s at %(module)s:%(lineno)s'}
-      },
-      handlers={
-        "h": {"class": "logging.StreamHandler", "formatter": "f", "level": self.level}
-      },
-      root={
-        "handlers": ["h"],
-        "level": self.level,
-      },
-    )
+    self.log_format = '%(asctime)s %(name)s %(levelname)s %(message)s at %(module)s:%(lineno)s'
+    self.handlers = [logging.StreamHandler()]
     if log_file is not None:
-      self.logging_config["handlers"]['file'] = {
-        "class": "logging.FileHandler",
-        "level": self.level,
-        "formatter": "f",
-        "filename": log_file,
-        "encoding": "utf8"
-      }
-      self.logging_config["root"]["handlers"].append("file")
+      self.handlers.append(logging.FileHandler(log_file, encoding="utf8", mode='w'))
+    logging.basicConfig(level=self.level,
+                        format=self.log_format,
+                        handlers=self.handlers)
 
-    logging.config.dictConfig(self.logging_config)
     self.logger = logging.getLogger("root")
+    self.logger.setLevel(self.level)
+    self.logger.propagate = True
     if debug is True:
       requests_log = logging.getLogger("requests.packages.urllib3")
       requests_log.setLevel(logging.DEBUG)

@@ -7,7 +7,6 @@ from lib.log import Log
 from lib.shift.mariapod import Mariapod
 from lib.config import Config
 
-LOG = logging.getLogger("push_maria")
  
 def parse_args():
   """
@@ -18,7 +17,12 @@ def parse_args():
                       action='store_true',
                       default=False,
                       help='Display debug information')
-  parser.add_argument('--list',
+  parser.add_argument('--delete',
+                      action='store_true',
+                      dest='delete_deploy',
+                      default=False,
+                      help='Delete all resources for a deployment')
+  parser.add_argument('--deploy',
                       action='store_true',
                       default=False,
                       help='Only list stuff')

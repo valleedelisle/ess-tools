@@ -6,7 +6,7 @@ import configparser
 from os import environ
 import re
 import logging
-LOG = logging.getLogger("root.config")
+LOG = logging.getLogger("config")
 
 class CaseConfigParser(configparser.SafeConfigParser):# pylint: disable=too-many-ancestors
   """

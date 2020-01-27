@@ -9,7 +9,7 @@ from db.models.cases import Case # pylint: disable=relative-beyond-top-level
 from lib.req import Req
 
 
-LOG = logging.getLogger("root.hydra")
+LOG = logging.getLogger("hydra")
 
 class Hydra():
   """

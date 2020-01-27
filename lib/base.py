@@ -1,7 +1,3 @@
-import logging
-
-LOG = logging.getLogger('root.base')
-
 class Base():
   def __repr__(self):
     return '%s(%s)' % (

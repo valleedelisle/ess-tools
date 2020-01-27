@@ -1,13 +1,14 @@
 """
 Module for sending emails
 """
+
+import logging
 import smtplib
 import traceback
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import logging
 
-LOG = logging.getLogger("root.mail")
+LOG = logging.getLogger("mail")
 
 class Email():
   """
