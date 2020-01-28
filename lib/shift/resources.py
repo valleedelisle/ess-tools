@@ -13,6 +13,8 @@ class ResourceBase(Base):
   items = None
   connection_debug = False
   good_status = None
+  host_ip = None
+  node_port = None
   max_validation_retries = 30
   api_list = {'core': 'CoreV1Api', 'apps': 'AppsV1Api'}
 
@@ -80,9 +82,8 @@ class ResourceBase(Base):
 
   def post(self):
     func = getattr(self.api_connection, 'create_namespaced_' + self.long_name)
-    gen_obj = getattr(self.obj, self.short_name).resource
     LOG.debug('%s Deployment %s' % (self.short_name, self.resource))
-    self.resp = func(body=gen_obj, namespace=self.namespace)
+    self.resp = func(body=self.resource, namespace=self.namespace)
     LOG.debug('%s Deployment created. status="%s"' % (self.short_name, str(self.resp.status)))
 
   def delete(self):
@@ -102,6 +103,7 @@ class ResourceBase(Base):
     if self.items:
       for item in self.items.items:
         LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status))
+        LOG.debug("Full item: %s" % item)
 
   def validate(self):
     if not self.good_status:
@@ -131,7 +133,6 @@ class ResourceBase(Base):
         if not validate:
           LOG.debug("No validation")
         self.get_all()
-        LOG.debug("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status))
         sleep(2)
     else:
       LOG.error("No items returned by list_namespaced")
@@ -141,41 +142,47 @@ class Pvc(ResourceBase):
   short_name = 'pvc'
   good_status = "Bound"
   api = 'core'
-  def __init__(self, obj):
+  def __init__(self, obj, suffix=None):
     self.obj = obj
     super(Pvc, self).__init__()
-    volume_name = self.name + '-' + self.volume_suffix
+    if not suffix:
+      suffix = self.volume_suffix
+
+    volume_name = self.name + '-' + suffix
     requirements = client.V1ResourceRequirements(requests={
                                                    'storage': self.storage_size
                                                  })
     spec = client.V1PersistentVolumeClaimSpec(access_modes=[self.storage_access_mode],
                                                    resources=requirements,
                                                    selector=self.selector())
-    self.resource = client.V1PersistentVolumeClaim(metadata=self.metadata('claim'), spec=spec)
+    self.resource = client.V1PersistentVolumeClaim(metadata=self.metadata('claim-' + suffix), spec=spec)
   def show(self):
     self.get_all()
     if self.items:
       for item in self.items.items:
         LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.phase))
-
+        LOG.debug("Full item: %s" % item)
 
 
 class Pv(ResourceBase):
   long_name = 'persistent_volume'
   short_name = 'pv'
   api = 'core'
-  def __init__(self, obj):
+  def __init__(self, obj, suffix=None):
     self.obj = obj
     super(Pv, self).__init__()
-    claim_name = 'claim-' + self.name
+    if not suffix:
+      suffix = self.volume_suffix
+    claim_name = 'claim-' + suffix + '-' + self.name
     claim = client.V1PersistentVolumeClaimVolumeSource(claim_name=claim_name)
-    self.resource = client.V1Volume(name=self.name + '-' + self.volume_suffix,
+    self.resource = client.V1Volume(name=self.name + '-' + suffix,
                                     persistent_volume_claim=claim)
 
 class Svc(ResourceBase):
   long_name = 'service'
   short_name = 'svc'
   api = 'core'
+  node_port = None
   def __init__(self, obj):
     self.obj = obj
     super(Svc, self).__init__()
@@ -184,6 +191,7 @@ class Svc(ResourceBase):
                                     protocol=self.service_protocol)
     spec = client.V1ServiceSpec(
         ports=[svc_port],
+        selector=self.label_dict(),
         type='NodePort',
     )
     self.resource = client.V1Service(
@@ -197,21 +205,25 @@ class Svc(ResourceBase):
     self.get_all()
     if self.items:
       for item in self.items.items:
-        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.load_balancer.ingress))
-
-
+        self.node_port = item.spec.ports[0].node_port
+        LOG.info("Type %s Item %s Node Port: %s" % (self.short_name, item.metadata.name, self.node_port))
+        LOG.debug("Full item: %s" % item)
 
 class Pod(ResourceBase):
   long_name = 'pod'
   short_name = 'pod'
   api = 'core'
   good_status = "Running"
+  host_ip = None
   def __init__(self, obj):
     self.obj = obj
     super(Pod, self).__init__()
+
     self.resource = client.V1Container(name=self.name,
                                        image=self.image,
                                        env=obj.env(),
+                                       args=self.args,
+                                       resources=self.resource_req,
                                        volume_mounts=obj.mounts(),
                                        ports=obj.ports())
 
@@ -219,7 +231,8 @@ class Pod(ResourceBase):
     self.get_all()
     if self.items:
       for item in self.items.items:
-        LOG.info("Type %s Item %s Status: %s" % (self.short_name, item.metadata.name, item.status.phase))
+        self.host_ip = item.status.host_ip
+        LOG.info("Type %s Item %s Status: %s HostIP: %s" % (self.short_name, item.metadata.name, item.status.phase, self.host_ip))
 
 
 
@@ -230,8 +243,12 @@ class App(ResourceBase):
   def __init__(self, obj):
     self.obj = obj
     super(App, self).__init__()
+    init_container_list = list()
+    if hasattr(obj, "init_containers"):
+      init_container_list = self.init_containers()
     pod_spec = client.V1PodSpec(containers=[obj.pod.resource],
-                                volumes=[obj.pv.resource])
+                                init_containers=init_container_list,
+                                volumes=obj.volume_list())
 
     template = client.V1PodTemplateSpec(
                  metadata=self.metadata('pod-template'),

@@ -26,10 +26,18 @@ def parse_args():
                       action='store_true',
                       default=False,
                       help='Only list stuff')
+  parser.add_argument('-u', '--username',
+                      action='store',
+                      type=str,
+                      help='Salesforce username')
+  parser.add_argument('-p', '--password',
+                      action='store',
+                      type=str,
+                      help='Salesforce password')
   parser.add_argument('-t', '--token',
                       action='store',
                       type=str,
-                      help='Token used for authentication')
+                      help='Token used for OpenShift authentication')
   parser.add_argument('-n', '--name',
                       action='store',
                       required=True,
@@ -61,8 +69,9 @@ def parse_args():
                                'hydra-notifierd-secrets.conf'])
   parser.add_argument('--dump-file',
                       action='store',
+                      default=None,
                       type=str,
-                      help='MySQL dump file used to feed the container')
+                      help='URL of the MySQL dump file used to feed the container')
  
   return parser.parse_args()
 
@@ -74,6 +83,11 @@ def main():
     args['cluster'] = CONF.paas['url']
   if not args['token']:
     args['token'] = CONF.paas['token']
+  if not args['username']:
+    args['username'] = CONF.hydra['username']
+  if not args['password']:
+    args['password'] = CONF.hydra['password']
+
   maria = Mariapod(**args)
 
 
