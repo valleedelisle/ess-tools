@@ -1,20 +1,19 @@
+# pylint: disable=no-member
+"""
+MariaDB Pod Class
+"""
+
 import logging
-import re
-import time
-import traceback
-import os
-import sys
-import codecs
-import base64
-from chardet.universaldetector import UniversalDetector
 from kubernetes import client
-from lib.mysql_connector import MysqlConnect
-from lib.base import Base
+from lib.shift.podbase import PodBase
 from lib.shift.resources import Pvc, Pv, Svc, Pod, App
 
 LOG = logging.getLogger("mariapod")
 
-class Mariapod(Base):
+class Mariapod(PodBase):
+  """
+  MariaDB Pod Class
+  """
   service_port = 3306
   service_protocol = 'TCP'
   service_name = 'mariadb'
@@ -34,13 +33,13 @@ class Mariapod(Base):
   dump_file = None
   mysql = None
   data_format = 'utf-8'
-  volumes = [{ 'mount_path': '/var/lib/mysql',
-               'name': 'data',
-               'sub_path': 'mysql'},
-             { 'mount_path': '/docker-entrypoint-initdb.d',
-               'name': 'init',
-               'sub_path': 'docker-entrypoint-initdb.d'}]
-  resource_req = client.V1ResourceRequirements(                                                                                                                                                                                                                                                                                                                                                                                           
+  volumes = [{'mount_path': '/var/lib/mysql',
+              'name': 'data',
+              'sub_path': 'mysql'},
+             {'mount_path': '/docker-entrypoint-initdb.d',
+              'name': 'init',
+              'sub_path': 'docker-entrypoint-initdb.d'}]
+  resource_req = client.V1ResourceRequirements(
     limits={"cpu": 1, "memory": "1Gi"},
     requests={"cpu": 1, "memory": "1Gi"}
   )
@@ -63,25 +62,29 @@ class Mariapod(Base):
     if self.deploy:
       LOG.info("Deploying the resources")
       self.create()
-      LOG.info("Validating status")
-      self.check()
+      #LOG.info("Validating status")
+      #self.check()
     if self.delete_deploy:
-      LOG.info("Deleting resources for name %s" % self.name)
+      LOG.info("Deleting resources for name %s", self.name)
       for vol in self.volumes:
         getattr(self, 'pvc_' + vol['name']).delete()
       self.svc.delete()
       self.pod.delete()
       self.app.delete()
     else:
-      LOG.info("Listing resources for name %s" % self.name)
+      LOG.info("Listing resources for name %s", self.name)
       for vol in self.volumes:
         getattr(self, 'pvc_' + vol['name']).show()
       self.svc.show()
       self.pod.show()
       self.app.show()
-      LOG.info("mysql -u root --password=%s -h %s -P %s" % (self.mysql_root_password, self.pod.host_ip, self.svc.node_port))
+      LOG.info("mysql -u root --password=%s -h %s -P %s", self.mysql_root_password,
+               self.pod.host_ip, self.svc.node_port)
 
   def generate(self):
+    """
+    Generate the Resource objects
+    """
     for vol in self.volumes:
       setattr(self, 'pvc_' + vol['name'], Pvc(self, suffix=vol['name']))
       setattr(self, 'pv_' + vol['name'], Pv(self, suffix=vol['name']))
@@ -89,25 +92,47 @@ class Mariapod(Base):
     self.pod = Pod(self)
     self.app = App(self)
 
-  def init_container(self):
-    return client.V1Container(name=self.name + '-init',
-                                image='appropriate/curl',
-                                args=[
-                                  '-u', self.username + ':' + self.password,
-                                  '-o', '/docker-entrypoint-initdb.d/init.sql',
-                                  '$(URL)',
-                                ],
-                                volume_mounts=self.mounts(),
-                                resources=self.resource_req,
-                                env=[client.V1EnvVar(name='URL', value=self.dump_file)],
-                             )
+  def init_containers(self):
+    """
+    Returns a curl container object that will download the case attachment
+    """
+    if not self.dump_file:
+      return None
+    init_file = '/docker-entrypoint-initdb.d/init.sql'
+    args=[
+      '-u', self.username + ':' + self.password,
+      '-s',
+      '$(URL)'
+    ]
+    if self.gunzip:
+      args = ['-o', init_file + '.gz'] + args + [';gunzip ' + init_file + '.gz']
+    if self.xunzip:
+      args = ['-o', init_file + '.xz'] + args + [';unxz' + init_file + '.xz']
+    else:
+      args = ['-o', init_file] + args
+    args = ['curl'] + args
+    return [client.V1Container(name=self.name + '-init',
+                              image='appropriate/curl',
+                              command=['/bin/sh'],
+                              args=['-c', " ".join(args)],
+                              volume_mounts=self.mounts(),
+                              resources=self.resource_req,
+                              env=[client.V1EnvVar(name='URL', value=self.dump_file)],
+                             )]
   def create(self):
+    """
+    Sends the objects to the OSC API
+    """
     for vol in self.volumes:
       getattr(self, 'pvc_' + vol['name']).post()
     self.svc.post()
     self.app.post()
 
   def check(self):
+    """
+    Returns when everyone is ready,
+    or after max_validation_retries
+    """
     for vol in self.volumes:
       getattr(self, 'pvc_' + vol['name']).check()
     self.pod.check()
@@ -123,18 +148,24 @@ class Mariapod(Base):
             client.V1EnvVar(name='MYSQL_ROOT_PASSWORD', value=self.mysql_root_password)]
 
   def mounts(self):
+    """
+    Returns the mounts object
+    based on volumes class variable
+    """
     return [client.V1VolumeMount(mount_path=vol['mount_path'],
                                  name=self.name + '-' + vol['name'],
                                  sub_path=vol['sub_path'])
             for vol in self.volumes]
 
   def volume_list(self):
-      return [getattr(self, 'pv_' + vol['name']).resource for vol in self.volumes]
+    """
+    Returns the volumes resource obj
+    """
+    return [getattr(self, 'pv_' + vol['name']).resource for vol in self.volumes]
 
 
   def ports(self):
+    """
+    Returns list of exposed port(s)
+    """
     return [client.V1ContainerPort(container_port=self.service_port)]
-
-  def __setattr__(self, key, value):
-    super().__setattr__(key, value)
- 

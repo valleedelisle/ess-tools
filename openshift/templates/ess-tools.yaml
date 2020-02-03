@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Template
 labels:
-  app: ess-notifier
-  template: ess-notifier
+  app: ess-tools
+  template: ess-tools
 message: 'The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
   For more information about using this template, including OpenShift considerations,
   see https://gitlab.cee.redhat.com/dvalleed/ess-tools'
@@ -17,7 +17,7 @@ metadata:
     openshift.io/support-url: https://gitlab.cee.redhat.com/dvalleed/ess-tools
     tags: quickstart,python
     template.openshift.io/bindable: 'false'
-  name: ess-notifier
+  name: ess-tools
 objects:
 - apiVersion: v1
   kind: Secret
@@ -32,7 +32,9 @@ objects:
   metadata:
     annotations:
       description: Keeps track of changes in the application image
-    name: ${NAME}
+    name: ess-tools
+    spec:
+      dockerImageRepository: docker-registry-default.cloud.registry.upshift.redhat.com/ess
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -43,8 +45,8 @@ objects:
   spec:
     output:
       to:
-        kind: ImageStreamTag
-        name: ${NAME}:latest
+         kind: ImageStreamTag
+         name: ${NAME}:${SOURCE_REPOSITORY_REF}
     source:
       contextDir: ${CONTEXT_DIR}
       git:
@@ -71,9 +73,9 @@ objects:
     triggers:
     - type: ImageChange
     - type: ConfigChange
-    - github:
-        secret: ${GITHUB_WEBHOOK_SECRET}
-      type: GitHub
+    - gitlab:
+        secret: ${GITLAB_WEBHOOK_SECRET}
+      type: GitLab
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -165,7 +167,9 @@ objects:
         - ${NAME}
         from:
           kind: ImageStreamTag
-          name: ${NAME}:latest
+          name: docker-registry-default.cloud.registry.upshift.redhat.com/ess/${NAME}:${SOURCE_REPOSITORY_REF}
+        pullSecret:
+          name: psi-internal-registry
       type: ImageChange
     - type: ConfigChange
 - apiVersion: v1
@@ -276,7 +280,7 @@ parameters:
   displayName: Name
   name: NAME
   required: true
-  value: ess-notifier
+  value: ess-tools
 - description: The OpenShift Namespace where the ImageStream resides.
   displayName: Namespace
   name: NAMESPACE
@@ -326,12 +330,12 @@ parameters:
   displayName: Application Hostname
   name: APPLICATION_DOMAIN
   value: ''
-- description: Github trigger secret.  A difficult to guess string encoded as part
+- description: Gitlab trigger secret.  A difficult to guess string encoded as part
     of the webhook URL.  Not encrypted.
-  displayName: GitHub Webhook Secret
+  displayName: GitLab Webhook Secret
   from: '[a-zA-Z0-9]{40}'
   generate: expression
-  name: GITHUB_WEBHOOK_SECRET
+  name: GITLAB_WEBHOOK_SECRET
 - displayName: Database Service Name
   name: DATABASE_SERVICE_NAME
   required: true
@@ -353,8 +357,12 @@ parameters:
   from: '[a-zA-Z0-9]{16}'
   generate: expression
   name: DATABASE_PASSWORD
-- description: File executed by the container
+- description: Used to run the application from a script file
   displayName: Application runnable script
+  name: APP_SCRIPT
+  value: hydra-notifierd.py
+- description: File executed by the container
+  displayName: Application runnable python script
   name: APP_FILE
   value: hydra-notifierd.py
 - description: Relative path to Gunicorn configuration file (optional).

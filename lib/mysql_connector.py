@@ -1,3 +1,8 @@
+"""
+MySQL connector
+Used to import customer's dump into container's mysql instance
+"""
+
 import logging
 import traceback
 import time
@@ -6,13 +11,18 @@ from mysql.connector import errorcode
 
 LOG = logging.getLogger("mysql")
 
-class MysqlConnect():
+class MysqlConnect(): # pylint: disable=too-few-public-methods
+  """
+  Class refering to the mysql connector
+  """
   cnx = None
   cursor = None
   def __init__(self, user='root', password='q1w2e3', host=None, port=3306):
     while not self.cursor:
       try:
-        self.cnx = mysql.connector.connect(user=user, password=password, host=host, port=port, charset="utf8", get_warnings=True, connect_timeout=1000)
+        self.cnx = mysql.connector.connect(user=user, password=password,
+                                           host=host, port=port, charset="utf8", get_warnings=True,
+                                           connect_timeout=1000)
         self.cursor = self.cnx.cursor()
       except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -20,9 +30,8 @@ class MysqlConnect():
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
           LOG.error("Database does not exist")
         else:
-          LOG.error("Error: %s Traceback: %s" % (err, traceback.format_exc()))
+          LOG.error("Error: %s Traceback: %s", err, traceback.format_exc())
         time.sleep(1)
-        pass
- 
+
   def __del__(self):
     self.cnx.close()

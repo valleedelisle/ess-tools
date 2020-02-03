@@ -1,4 +1,5 @@
 import logging
+import traceback
 from time import sleep
 from kubernetes import client
 from lib.base import Base
@@ -29,6 +30,17 @@ class ResourceBase(Base):
     configuration.verify_ssl=False
     configuration.debug = self.connection_debug
     self.api_connection = getattr(client, self.api_list[self.api])(client.ApiClient(configuration))
+
+  def init_containers(self):
+    return []
+  def volume_list(self):
+    return [] 
+  def ports(self):
+    return []
+  def mounts(self):
+    return []
+  def env(self):
+    return []
 
   def label_dict(self):
     """
@@ -215,14 +227,14 @@ class Pod(ResourceBase):
   api = 'core'
   good_status = "Running"
   host_ip = None
+  args = None
   def __init__(self, obj):
     self.obj = obj
     super(Pod, self).__init__()
-
     self.resource = client.V1Container(name=self.name,
                                        image=self.image,
                                        env=obj.env(),
-                                       args=self.args,
+                                       args=obj.args,
                                        resources=self.resource_req,
                                        volume_mounts=obj.mounts(),
                                        ports=obj.ports())
@@ -243,13 +255,9 @@ class App(ResourceBase):
   def __init__(self, obj):
     self.obj = obj
     super(App, self).__init__()
-    init_container_list = list()
-    if hasattr(obj, "init_containers"):
-      init_container_list = self.init_containers()
     pod_spec = client.V1PodSpec(containers=[obj.pod.resource],
-                                init_containers=init_container_list,
-                                volumes=obj.volume_list())
-
+                                volumes=obj.volume_list(),
+                                init_containers=obj.init_containers())
     template = client.V1PodTemplateSpec(
                  metadata=self.metadata('pod-template'),
                  spec=pod_spec)

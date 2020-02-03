@@ -50,6 +50,7 @@ class Case(DeclarativeBase):
   bugzillaNumber = sa.Column(sa.Integer)
   bugzillaSummary = sa.Column(sa.String(255))
   events = sao.relationship('Event', back_populates='case', cascade='save-update, merge, delete')
+  attachments = sao.relationship('Attachment', back_populates='case', cascade='save-update, merge, delete')
   bugs = sao.relationship('Bug', secondary=bugs_cases_table, back_populates='cases',
                           cascade='save-update, delete')
 

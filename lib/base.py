@@ -1,4 +1,11 @@
-class Base():
+"""
+Base object
+"""
+
+class Base(): # pylint: disable=too-few-public-methods
+  """
+  Base object
+  """
   def __repr__(self):
     return '%s(%s)' % (
       (self.__class__.__name__),

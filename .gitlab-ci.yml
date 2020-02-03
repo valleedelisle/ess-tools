@@ -22,7 +22,7 @@ test1:
     - python3.6 -m pip install pylint --quiet
     - python3.6 -m pip install pylint-sqlalchemy --quiet
   script:
-   - pylint --load-plugins pylint_sqlalchemy bug-report.py hydra-notifierd.py lib/*.py db/*
+   - pylint --load-plugins pylint_sqlalchemy oc_mariadb.py bug-report.py hydra-notifierd.py lib/*.py db/*
   tags:
     - docker
 
@@ -50,7 +50,7 @@ test2:
 .deploy: &deploy
   script:
     - echo "$APP"
-    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -e JWT_REFRESH_TOKEN="$JWT_REFRESH_TOKEN" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
       #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker

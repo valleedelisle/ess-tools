@@ -63,9 +63,13 @@ class Hydra():
           continue
       case_list.append(hcase)
       if last_update <= timedelta(minutes=self.attachment_time):
-        LOG.debug("Checking attachments for case %s" % case_number)
-        self.find_attachments(case_number)
- 
+        LOG.debug("Checking attachments for case %s", case_number)
+        attachments = self.find_attachments(case_number)
+        for att in attachments:
+          if self.conf.hydra.getboolean('auto_dump_sql') is True:
+
+          
+
     return case_list
 
   def build_query(self):
@@ -145,18 +149,28 @@ class Hydra():
     """
     Function to filter attachments from list based on specific criteria
     """
-    attachment_date = datetime.strptime(attachment["createdDate"], "%Y-%m-%dT%H:%M:%SZ")
-    if (datetime.now() - attachment_date > timedelta(minutes=self.attachment_time) and
-        ".sql" in attachment["fileName"]):
+    if (datetime.now() - attachment.createdDate > timedelta(minutes=self.attachment_time) and
+        ".sql" in attachment.fileName):
       return True
+    return False
 
   def find_attachments(self, case_id):
     """
     Returns a list of filtered attachments
     """
-    all_att = self.get_attachments(case_id)
+    all_att = list()
+    for hatt in self.get_attachments(case_id):
+      att = Attachment(**hatt)
+      old_att = db_package.session.query(Attachment).filder_by(id=att.id)
+      if old_att.count() == 0:
+        db_package.session.add(att)
+        db_package.session.commit()
+      else:
+        old_att.update(att.__dict_repr__())
+      all_att.append(att)
     attachments = list(filter(self.filter_attachments, all_att))
-    LOG.debug("Filtered Attachments: %s" % attachments)
+    LOG.debug("Filtered Attachments: %s", attachments)
+    return attachments
 
   def set_tags(self, case_id, tags):
     """
