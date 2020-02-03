@@ -46,7 +46,7 @@ objects:
     output:
       to:
          kind: ImageStreamTag
-         name: ${NAME}:${SOURCE_REPOSITORY_REF}
+         name: ess-tools:${SOURCE_REPOSITORY_REF}
     source:
       contextDir: ${CONTEXT_DIR}
       git:
