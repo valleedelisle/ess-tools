@@ -50,7 +50,7 @@ test2:
 .deploy: &deploy
   script:
     - echo "$APP"
-    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-notifier.yaml --name="$APP" -p NAME="$APP" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
+    - oc get services "$APP" 2> /dev/null || oc new-app openshift/templates/ess-tools.yaml --name="$APP" -p NAME="$APP" -l "set=$APP" -p SOURCE_REPOSITORY_REF="$CI_COMMIT_REF_NAME"
       #- oc start-build $APP --from-dir=. --follow || sleep 3s && oc start-build $APP --from-dir=. --follow
   tags:
     - docker
