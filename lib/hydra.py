@@ -72,7 +72,7 @@ class Hydra():
         attachments = self.find_attachments(case_number)
         for att in attachments:
           if self.conf.hydra.getboolean('auto_dump_sql') is True:
-            LOG.debug("Autodumping")
+            LOG.debug("Autodumping %s", att)
 
     return case_list
 

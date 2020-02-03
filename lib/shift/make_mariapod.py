@@ -23,7 +23,7 @@ class MakeMariapod(PodBase):
   storage_size = None
   storage_access_mode = None
   app_label = 'make-mariadb'
-  image = 'docker-registry.default.svc:5000/ess/ess-notifier:latest'
+  image = 'docker-registry.default.svc:5000/ess/ess-tools:latest'
   name = 'make_mariadb'
   namespace = 'ess'
   cluster = 'https://paas.psi.redhat.com:443'
@@ -38,6 +38,7 @@ class MakeMariapod(PodBase):
     """
     We pull the class attributes and store them in the instance
     """
+    super(MakeMariapod, self).__init__()
     for key in dir(self.__class__):
       if (not key.startswith('_') and
           not callable(getattr(self.__class__, key))):

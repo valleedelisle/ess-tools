@@ -2,19 +2,18 @@
 #!/usr/bin/env python
 """Attachment model"""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from db.models import sa, sao
-from db.models import DeclarativeBase, session
+from db.models import DeclarativeBase
 from db.models.cases import Case # pylint: disable=unused-import
-import db.models as db_package
 
 LOG = logging.getLogger("db.attachments")
 
 __all__ = ['Attachment']
 
-class Attachment(DeclarativeBase):
+class Attachment(DeclarativeBase): # pylint: disable=too-few-public-methods
   """
   Attachment DB Object
   """
@@ -45,5 +44,5 @@ class Attachment(DeclarativeBase):
   def __init__(self, **kwargs):
     # Initializing some defaults
     self.__dict__.update(kwargs)
-    self.lastModifiedDate = datetime.strptime(self.lastModifiedDate, "%Y-%m-%dT%H:%M:%SZ")
-    self.createdDate = datetime.strptime(self.createdDate, "%Y-%m-%dT%H:%M:%SZ")
+    self.lastModifiedDate = datetime.strptime(self.lastModifiedDate, "%Y-%m-%dT%H:%M:%SZ") # pylint: disable=invalid-name
+    self.createdDate = datetime.strptime(self.createdDate, "%Y-%m-%dT%H:%M:%SZ") # pylint: disable=invalid-name

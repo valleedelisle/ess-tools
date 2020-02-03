@@ -51,6 +51,7 @@ class Mariapod(PodBase):
     """
     We pull the class attributes and store them in the instance
     """
+    super(Mariapod, self).__init__()
     for key in dir(self.__class__):
       if (not key.startswith('_') and
           not callable(getattr(self.__class__, key))):

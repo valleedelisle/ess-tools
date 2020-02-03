@@ -7,46 +7,15 @@ Notification tool for Red Hat's hydra API
 """
 
 from __future__ import print_function
-import argparse
 from lib.log import Log
 from lib.config import Config
 from lib.bz import Bzapi, Bz
 from lib.air import Air
+from lib.argparser import bug_report_parse_args
 import db.models as db_package
 
 from db.models.cases import Case
 from db.models.bugs import Bug
-
-def parse_args():
-  """
-  Function to parse arguments
-  """
-  parser = argparse.ArgumentParser(description='Bug report tool')
-  parser.add_argument('--debug',
-                      default=False,
-                      action='store_true',
-                      help='Display debug information')
-  parser.add_argument('--customer',
-                      required=True,
-                      type=lambda d: "customer_%s" % d,
-                      help='Customer name')
-
-  parser.add_argument('-l',
-                      '--log-file',
-                      default='bug-report.log',
-                      help='Log file')
-  parser.add_argument('-b',
-                      '--get-bz',
-                      default=False,
-                      action='store_true',
-                      help='Download BZ information from bugzilla.redhat.com')
-  parser.add_argument('-c',
-                      '--config-file',
-                      nargs='+',
-                      default=['hydra-notifierd.conf',
-                               'hydra-notifierd-secrets.conf'])
-  return parser.parse_args()
-
 
 def get_bug_cases():
   """
@@ -77,7 +46,7 @@ def get_bug_cases():
   db_package.session.commit()
 
 if __name__ == '__main__':
-  args = parse_args()
+  args = bug_report_parse_args()
   LOG = Log(debug=args.debug, log_file=args.log_file)
   CONF = Config(config_file=args.config_file)
   db_package.init_model(CONF.sql['database'])

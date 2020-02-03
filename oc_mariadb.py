@@ -28,7 +28,7 @@ from lib.shift.mariapod import Mariapod
 from lib.config import Config
 from lib.hydra import Hydra
 import db.models as db_package
-from lib.argparse import mariadb_parse_args, add_osc_creds
+from lib.argparser import mariadb_parse_args, add_osc_creds
 
 def main():
   """
@@ -38,7 +38,7 @@ def main():
   LOG = Log(debug=args['debug'], log_file=args['log_file'])
   CONF = Config(config_file=args['config_file'])
   db_package.init_model(CONF.sql['database'])
-  args = add_osc_args(CONF, args)
+  args = add_osc_creds(CONF, args)
   if args['case']:
     attachment = Hydra(CONF).find_attachments(args['case'], args['attachment_id'])
     if not attachment:

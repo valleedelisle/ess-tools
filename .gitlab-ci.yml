@@ -22,7 +22,7 @@ test1:
     - python3.6 -m pip install pylint --quiet
     - python3.6 -m pip install pylint-sqlalchemy --quiet
   script:
-   - pylint --load-plugins pylint_sqlalchemy oc_mariadb.py bug-report.py hydra-notifierd.py lib/*.py db/*
+   - pylint --load-plugins pylint_sqlalchemy oc_mariadb.py bug-report.py hydra-notifierd.py lib/*.py db/* 
   tags:
     - docker
 

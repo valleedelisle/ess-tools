@@ -23,7 +23,6 @@ Notification tool for Red Hat's hydra API
 
 from __future__ import print_function
 import time
-import argparse
 import traceback
 import unicodedata  # pylint: disable=unused-import
 from pid import PidFile
@@ -33,7 +32,7 @@ from lib.config import Config
 from lib.jwt import Jwt
 import db.models as db_package
 from db.models.cases import Case
-from lib.argparse import notifier_parse_args
+from lib.argparser import notifier_parse_args
 
 def hydra_poll(customer, jwt):
   """
