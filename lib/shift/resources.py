@@ -162,7 +162,7 @@ class Pvc(ResourceBase):
 
     volume_name = self.name + '-' + suffix
     requirements = client.V1ResourceRequirements(requests={
-                                                   'storage': self.storage_size
+                                                   'storage': str(self.storage_size) + 'Gi'
                                                  })
     spec = client.V1PersistentVolumeClaimSpec(access_modes=[self.storage_access_mode],
                                                    resources=requirements,

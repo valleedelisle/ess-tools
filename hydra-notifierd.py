@@ -33,28 +33,7 @@ from lib.config import Config
 from lib.jwt import Jwt
 import db.models as db_package
 from db.models.cases import Case
-
-
-def parse_args():
-  """
-  Function to parse arguments
-  """
-  parser = argparse.ArgumentParser(description='Hydra Case notifier Daemon')
-  parser.add_argument('--debug',
-                      default=False,
-                      action='store_true',
-                      help='Display debug information')
-  parser.add_argument('-l',
-                      '--log-file',
-                      default='alembic/hydra-notifierd.log',
-                      help='Log file')
-  parser.add_argument('-w', '--working-dir', default='./')
-  parser.add_argument('-c',
-                      '--config-file',
-                      nargs='+',
-                      default=['hydra-notifierd.conf',
-                               'hydra-notifierd-secrets.conf'])
-  return parser.parse_args()
+from lib.argparse import notifier_parse_args
 
 def hydra_poll(customer, jwt):
   """
@@ -104,7 +83,7 @@ def start_daemon(args): # pylint: disable=redefined-outer-name
     LOG.error("%s" % traceback.format_exc())
 
 if __name__ == '__main__':
-  args = parse_args()
+  args = notifier_parse_args()
   LOG = Log(debug=args.debug, log_file=args.log_file)
   CONF = Config(config_file=args.config_file)
 

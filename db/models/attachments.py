@@ -18,10 +18,10 @@ class Attachment(DeclarativeBase):
   """
   Attachment DB Object
   """
-  __tablename__ = 'cases'
+  __tablename__ = 'attachments'
   id = sa.Column(sa.String(32), primary_key=True)
   uuid = sa.Column(sa.String(32))
-  caseNumber = sa.Column(sa.String(8), unique=True)
+  caseNumber = sa.Column(sa.String(8), sa.ForeignKey('cases.caseNumber', ondelete='CASCADE'))
   checksum = sa.Column(sa.String(64))
   createdDate = sa.Column(sa.DateTime)
   createdBy = sa.Column(sa.String(64))
@@ -40,7 +40,7 @@ class Attachment(DeclarativeBase):
   importedDumpHostIp = sa.Column(sa.String(32))
   importedDumpHostPort = sa.Column(sa.String(32))
   conf_customer_name = sa.Column(sa.String(20))
-  case = sao.relationship("Case", back_populates="Attachments")
+  case = sao.relationship("Case", back_populates="attachments")
 
   def __init__(self, **kwargs):
     # Initializing some defaults

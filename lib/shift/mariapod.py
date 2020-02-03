@@ -17,7 +17,7 @@ class Mariapod(PodBase):
   service_port = 3306
   service_protocol = 'TCP'
   service_name = 'mariadb'
-  storage_size = '20Gi'
+  storage_size = 20
   storage_access_mode = 'ReadWriteMany'
   volume_suffix = 'data'
   app_label = 'cu-dump'
