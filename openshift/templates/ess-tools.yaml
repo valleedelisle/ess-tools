@@ -167,7 +167,7 @@ objects:
         - ${NAME}
         from:
           kind: ImageStreamTag
-          name: docker-registry-default.cloud.registry.upshift.redhat.com/ess/${NAME}:${SOURCE_REPOSITORY_REF}
+          name: docker-registry-default.cloud.registry.upshift.redhat.com/ess/ess-tools:${SOURCE_REPOSITORY_REF}
         pullSecret:
           name: psi-internal-registry
       type: ImageChange
