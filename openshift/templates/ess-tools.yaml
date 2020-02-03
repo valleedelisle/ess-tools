@@ -35,6 +35,10 @@ objects:
     name: ess-tools
     spec:
       dockerImageRepository: docker-registry-default.cloud.registry.upshift.redhat.com/ess
+      tags:
+        -
+          name: ${SOURCE_REPOSITORY_REF}
+          annotations: null
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -167,7 +171,7 @@ objects:
         - ${NAME}
         from:
           kind: ImageStreamTag
-          name: docker-registry-default.cloud.registry.upshift.redhat.com/ess/ess-tools:${SOURCE_REPOSITORY_REF}
+          name: ess-tools:${SOURCE_REPOSITORY_REF}
         pullSecret:
           name: psi-internal-registry
       type: ImageChange
