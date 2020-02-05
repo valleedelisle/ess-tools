@@ -40,12 +40,19 @@ class Mariapod(PodBase):
               'name': 'init',
               'sub_path': 'docker-entrypoint-initdb.d'}]
   resource_req = client.V1ResourceRequirements(
-    limits={"cpu": 1, "memory": "1Gi"},
-    requests={"cpu": 1, "memory": "1Gi"}
+    limits={"cpu": 6, "memory": "1Gi"},
+    requests={"cpu": 6, "memory": "1Gi"}
   )
   args = (
     '--max_allowed_packet=128M',
-    '--character-set-server=utf8'
+    '--character-set-server=utf8',
+    '--innodb-flush-log-at-trx-commit=0', 
+    '--log-bin=0',
+    '--innodb-thread-concurrency=0',
+    '--innodb-log-buffer-size=512M',
+    '--innodb-log-file-size=1G',
+    '--flush-time=0',
+    '--innodb_write_io_threads=8'
   )
   def __init__(self, **kwargs):
     """
