@@ -27,6 +27,12 @@ objects:
     database-password: ${DATABASE_PASSWORD}
     database-user: ${DATABASE_USER}
     secret-key: ${SECRET_KEY}
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    name: gitlab-webhook-secret
+  stringData:
+    WebHookSecretKey: ${GITLAB_WEBHOOK_SECRET}
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -66,7 +72,8 @@ objects:
     - type: ImageChange
     - type: ConfigChange
     - gitlab:
-        secret: ${GITLAB_WEBHOOK_SECRET}
+        secretReference:
+          name: gitlab-webhook-secret
       type: GitLab
 - apiVersion: v1
   kind: DeploymentConfig
