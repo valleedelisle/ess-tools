@@ -19,7 +19,7 @@ class Attachment(DeclarativeBase): # pylint: disable=too-few-public-methods
   """
   __tablename__ = 'attachments'
   id = sa.Column(sa.String(32), primary_key=True)
-  uuid = sa.Column(sa.String(32))
+  uuid = sa.Column(sa.String(36))
   caseNumber = sa.Column(sa.String(8), sa.ForeignKey('cases.caseNumber', ondelete='CASCADE'))
   checksum = sa.Column(sa.String(64))
   createdDate = sa.Column(sa.DateTime)
