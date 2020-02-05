@@ -34,11 +34,13 @@ objects:
       description: Keeps track of changes in the application image
     name: ess-tools
     spec:
-      dockerImageRepository: docker-registry-default.cloud.registry.upshift.redhat.com/ess
-      tags:
-        -
-          name: ${SOURCE_REPOSITORY_REF}
-          annotations: null
+      lookupPolicy:
+        local: true
+    dockerImageRepository: docker-registry-default.cloud.registry.upshift.redhat.com/ess
+    tags:
+      -
+        name: ${SOURCE_REPOSITORY_REF}
+        annotations: null
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -86,6 +88,7 @@ objects:
     annotations:
       description: Defines how to deploy the application server
       template.alpha.openshift.io/wait-for-ready: 'true'
+      alpha.image.policy.openshift.io/resolve-names: '*'
     name: ${NAME}
   spec:
     replicas: 1
@@ -103,10 +106,16 @@ objects:
       type: Rolling
     template:
       metadata:
+        annotations:
+          alpha.image.policy.openshift.io/resolve-names: '*'
         labels:
           name: ${NAME}
         name: ${NAME}
       spec:
+        template:
+          metadata:
+            annotations:
+              alpha.image.policy.openshift.io/resolve-names: '*'
         containers:
         - env:
           - name: INSTANCE_NAME
@@ -163,7 +172,6 @@ objects:
         - name: "${NAME}-alembic-versions"
           persistentVolumeClaim:
             claimName: "${NAME}-alembic-versions"
-
     triggers:
     - imageChangeParams:
         automatic: true
@@ -171,9 +179,10 @@ objects:
         - ${NAME}
         from:
           kind: ImageStreamTag
-          name: ess-tools:${SOURCE_REPOSITORY_REF}
-        pullSecret:
-          name: psi-internal-registry
+          name: "ess-tools:${SOURCE_REPOSITORY_REF}"
+          namespace: "ess"
+          pullSecret:
+            name: psi-internal-registry
       type: ImageChange
     - type: ConfigChange
 - apiVersion: v1

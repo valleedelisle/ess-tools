@@ -1,4 +1,4 @@
 #!/bin/bash
-oc delete all -l app=ess-notifier
-oc delete persistentvolumeclaims  -l app=ess-notifier
-oc delete secret/ess-notifier
+oc delete all -l set=review-auto-dump
+oc delete persistentvolumeclaims  -l set=review-auto-dump
+oc delete secret/review-auto-dump

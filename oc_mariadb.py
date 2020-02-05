@@ -41,17 +41,19 @@ def main():
   args = add_osc_creds(CONF, args)
   if args['case']:
     attachment = Hydra(CONF).find_attachments(args['case'], args['attachment_id'])
+    LOG.info("Found attachment %s" % attachment)
+    vol_size_multiplier = 5
     if not attachment:
       LOG.error("Attachment %s not found under case %s" % (args['attachment_id'], args['case']))
       sys.exit(1)
-    if attachment.fileType == "application/x-xz":
+    if attachment.fileType == "application/x-xz" or attachment.fileName.endswith('.xz'):
       args['xunzip'] = True
       vol_size_multiplier = 25
-    if attachment.fileType == "application/gzip":
+    if attachment.fileType == "application/gzip" or attachment.fileName.endswith('.gz'):
       args['gunzip'] = True
       vol_size_multiplier = 10
     args['storage_size'] = max(round(attachment.size * vol_size_multiplier / 1000 / 1000 / 1000), 1)
-    args['dump_url'] = attachment.link.replace('https://access.redhat.com/hydra/rest',
+    args['dump_file'] = attachment.link.replace('https://access.redhat.com/hydra/rest',
                                                CONF.hydra['attachments_url'])
   LOG.debug("Starting script: %s" % (args))
   Mariapod(**args)

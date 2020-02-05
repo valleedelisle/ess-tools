@@ -101,17 +101,23 @@ class Mariapod(PodBase):
       return None
     init_file = '/docker-entrypoint-initdb.d/init.sql'
     args=[
+      '-k',
       '-u', self.username + ':' + self.password,
-      '-s',
+#      '-s',
       '$(URL)'
     ]
+    post_args = None
     if self.gunzip:
-      args = ['-o', init_file + '.gz'] + args + [';gunzip ' + init_file + '.gz']
-    if self.xunzip:
-      args = ['-o', init_file + '.xz'] + args + [';unxz' + init_file + '.xz']
+      args = ['-o', init_file + '.gz'] + args + ['&&', 'gunzip -c ' + init_file + '.gz']
+      post_args = [ '&&', 'rm', init_file + '.gz' ]
+    elif self.xunzip:
+      args = ['-o', init_file + '.xz'] + args + ['&&', 'unxz -c ' + init_file + '.xz']
+      post_args = [ '&&', 'rm', init_file + '.xz' ]
     else:
-      args = ['-o', init_file] + args
-    args = ['curl'] + args
+      args = ['-o', '-'] + args
+    args = ['curl'] + args + ['|', 'sed \'/Current Database: `mysql`/,/Current Database:/{//!d;};\'', '>', init_file ]
+    if post_args:
+      args = args + post_args
     return [client.V1Container(name=self.name + '-init',
                               image='appropriate/curl',
                               command=['/bin/sh'],
@@ -144,9 +150,12 @@ class Mariapod(PodBase):
     """
     Container customisation with environment variables
     """
-    return [client.V1EnvVar(name='MYSQL_USER', value=self.mysql_user),
-            client.V1EnvVar(name='MYSQL_PASSWORD', value=self.mysql_password),
-            client.V1EnvVar(name='MYSQL_ROOT_PASSWORD', value=self.mysql_root_password)]
+    envlist = [client.V1EnvVar(name='MYSQL_USER', value=self.mysql_user),
+               client.V1EnvVar(name='MYSQL_PASSWORD', value=self.mysql_password),
+               client.V1EnvVar(name='MYSQL_ROOT_PASSWORD', value=self.mysql_root_password)]
+    if self.dump_file:
+      envlist.append(client.V1EnvVar(name='URL', value=self.dump_file))
+    return envlist
 
   def mounts(self):
     """

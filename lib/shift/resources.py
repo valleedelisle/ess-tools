@@ -56,11 +56,12 @@ class ResourceBase(Base):
     label_value = self.label_dict()[label_key]
     return "{}={}".format(label_key, label_value)
 
-  def metadata(self, object_name):
+  def metadata(self, object_name, annotations=None):
     """
     returns metadata object
     """
     return client.V1ObjectMeta(name=object_name + '-' + self.name,
+                               annotations=annotations,
                                labels=self.label_dict())
 
   def selector(self):
@@ -259,7 +260,8 @@ class App(ResourceBase):
                                 volumes=obj.volume_list(),
                                 init_containers=obj.init_containers())
     template = client.V1PodTemplateSpec(
-                 metadata=self.metadata('pod-template'),
+                 metadata=self.metadata('pod-template', 
+                                        annotations={'alpha.image.policy.openshift.io/resolve-names': '*' }),
                  spec=pod_spec)
     spec = client.V1DeploymentSpec(
              replicas=1,
