@@ -9,7 +9,6 @@ from db.models.cases import Case # pylint: disable=relative-beyond-top-level
 from db.models.attachments import Attachment # pylint: disable=relative-beyond-top-level
 from lib.req import Req
 from lib.jwt import Jwt
-import db.models as db_package
 
 
 LOG = logging.getLogger("hydra")
@@ -50,10 +49,10 @@ class Hydra():
       case['conf'] = self.conf
       case['conf_customer_name'] = self.customer
       hcase = Case(**case)
-      last_update = datetime.now() - hcase.lastModifiedDate
+      hcase.last_update = datetime.now() - hcase.lastModifiedDate
       case_number = hcase.caseNumber
-      if last_update > timedelta(days=self.conf.notifierd.getint('expire')):
-        LOG.debug("Ignoring case %s because %s days old", case_number, last_update.days)
+      if hcase.last_update > timedelta(days=self.conf.notifierd.getint('expire')):
+        LOG.debug("Ignoring case %s because %s days old", case_number, hcase.last_update.days)
         continue
       case_sbr_list = hcase.sbrGroup.split(";")
       if 'ignored_sbr' in customer_conf:
@@ -67,13 +66,6 @@ class Hydra():
                     "included SBR list: %s", case_number, case_sbr_list, included_sbr_list)
           continue
       case_list.append(hcase)
-      if last_update <= timedelta(minutes=self.attachment_time):
-        LOG.debug("Checking attachments for case %s", case_number)
-        attachments = self.find_attachments(case_number)
-        for att in attachments:
-          if self.conf.hydra.getboolean('auto_dump_sql') is True:
-            LOG.debug("Autodumping %s", att)
-
     return case_list
 
   def build_query(self):
@@ -165,12 +157,6 @@ class Hydra():
     all_att = list()
     for hatt in self.get_attachments(case_id):
       att = Attachment(**hatt)
-      old_att = db_package.session.query(Attachment).filter_by(id=att.id)
-      if old_att.count() == 0:
-        db_package.session.add(att)
-        db_package.session.commit()
-      else:
-        old_att.update(att.__dict_repr__())
       if uuid and uuid == att.uuid:
         return att
       all_att.append(att)

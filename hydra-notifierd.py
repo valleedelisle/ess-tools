@@ -53,6 +53,20 @@ def hydra_poll(customer, jwt):
       old_case.update(case.__dict_repr__())
     if case.internalStatus == 'Unassigned':
       old_case.first().store_event('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
+    if case.last_update <= timedelta(minutes=CONF.hydra['attachment_time']):
+      LOG.debug("Checking attachments for case %s", case.caseNumber)
+      attachments = hydra.find_attachments(case_number)
+      for att in attachments:
+        old_att = db_package.session.query(Attachment).filter_by(id=att.id)
+        if old_att.count() == 0:
+          db_package.session.add(att)
+          db_package.session.commit()
+        else:
+          old_att.update(att.__dict_repr__())
+        if self.conf.hydra.getboolean('auto_dump_sql') is True:
+          LOG.debug("Autodumping %s", att)
+
+
     db_package.session.commit()
 
 def start_daemon(args): # pylint: disable=redefined-outer-name
