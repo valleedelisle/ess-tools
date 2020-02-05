@@ -1,5 +1,6 @@
 #!/bin/bash 
-while ! echo > /dev/tcp/${MARIADB_SERVICE_HOST}/3306; do
+MARIADB_SERVICE_HOST=$(echo "${INSTANCE_NAME}-MARIADB-SERVICE-HOST" | sed 's/-/_/g' | tr "[a-z]" "[A-Z]")
+while ! echo > /dev/tcp/${!MARIADB_SERVICE_HOST}/3306; do
   echo "Rundeck still not up"
   sleep 10
 done
