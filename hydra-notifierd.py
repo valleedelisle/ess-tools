@@ -33,6 +33,7 @@ from lib.config import Config
 from lib.jwt import Jwt
 import db.models as db_package
 from db.models.cases import Case
+from db.models.attachments import Attachment
 from lib.argparser import notifier_parse_args
 
 def hydra_poll(customer, jwt):
@@ -55,8 +56,8 @@ def hydra_poll(customer, jwt):
     if case.internalStatus == 'Unassigned':
       old_case.first().store_event('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
     if case.last_update <= timedelta(minutes=CONF.hydra['attachment_time']):
-      LOG.debug("Checking attachments for case %s", case.caseNumber)
-      attachments = hydra.find_attachments(case_number)
+      LOG.debug("Checking attachments for case %s" % case.caseNumber)
+      attachments = hydra.find_attachments(case.caseNumber)
       for att in attachments:
         old_att = db_package.session.query(Attachment).filter_by(id=att.id)
         if old_att.count() == 0:
@@ -64,8 +65,8 @@ def hydra_poll(customer, jwt):
           db_package.session.commit()
         else:
           old_att.update(att.__dict_repr__())
-        if self.conf.hydra.getboolean('auto_dump_sql') is True:
-          LOG.debug("Autodumping %s", att)
+        if CONF.hydra.getboolean('auto_dump_sql') is True:
+          LOG.debug("Autodumping %s" % att)
 
 
     db_package.session.commit()
