@@ -55,7 +55,7 @@ def hydra_poll(customer, jwt):
       old_case.update(case.__dict_repr__())
     if case.internalStatus == 'Unassigned':
       old_case.first().store_event('internalStatus', 'New Case in Queue', notify=True, cooldown=10)
-    if case.last_update <= timedelta(minutes=CONF.hydra['attachment_time']):
+    if case.last_update <= timedelta(minutes=CONF.hydra.getint('attachment_time')):
       LOG.debug("Checking attachments for case %s" % case.caseNumber)
       attachments = hydra.find_attachments(case.caseNumber)
       for att in attachments:
