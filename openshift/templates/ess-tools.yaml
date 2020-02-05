@@ -32,11 +32,12 @@ objects:
   metadata:
     annotations:
       description: Keeps track of changes in the application image
+      openshift.io/image.insecureRepository: "true"
     name: ess-tools
     spec:
       lookupPolicy:
         local: true
-    dockerImageRepository: docker-registry-default.cloud.registry.upshift.redhat.com/ess
+    dockerImageRepository: docker-registry.upshift.redhat.com/ess/ess-tools
     tags:
       -
         name: ${SOURCE_REPOSITORY_REF}
@@ -52,7 +53,7 @@ objects:
     output:
       to:
          kind: ImageStreamTag
-         name: ess-tools:${SOURCE_REPOSITORY_REF}
+         name: "docker-registry.upshift.redhat.com/ess/ess-tools:${SOURCE_REPOSITORY_REF}"
     source:
       contextDir: ${CONTEXT_DIR}
       git:
